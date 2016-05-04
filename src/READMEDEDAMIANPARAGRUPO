@@ -1,0 +1,5 @@
+Para correr lo que tengo implementado hasta ahora tienen que ejecutar:
+
+echo "train.csv" | ./TP2
+
+:)

@@ -6,6 +6,7 @@
 #include <sstream>
 #include <algorithm>
 #include <math.h>
+#include <set>
 
 using namespace std;
 
@@ -143,4 +144,42 @@ double** toX(int** ans, int K){
 
 	return x;
 
+}
+
+#define cuad(x) ((x)*(x))
+double distancia(const vector<double>& v1, const vector<double>& v2) {
+	double ret = 0.0;
+
+	for (int i = 0; i<v1.size(); ++i) {
+		ret += cuad(v1[i]-v2[i]);
+	}
+	return sqrt(ret);
+}
+
+int knn(const vector<pair<int, vector<double>>>& train, const vector<double>& adivinar, int k) {
+
+	set<pair<double, int>> dist_index;
+
+	for (int i = 0; i<train.size(); ++i) {
+		dist_index.insert(make_pair(distancia(train[i].second, adivinar), train[i].first));
+		if (dist_index.size() > k) {
+			auto ulti = dist_index.end();
+			ulti--;
+			dist_index.erase(ulti);
+		}
+	}
+
+	int votos[10];
+	for (const auto& v : dist_index) {
+		votos[v.second]++;
+	}
+
+	int ganador = 0;
+	for (int i = 1; i<10; ++i) {
+		if (votos[i] > votos[ganador]) {
+			ganador = i;
+		}
+	}
+
+	return ganador;
 }

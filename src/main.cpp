@@ -211,7 +211,7 @@ void normalizar(vector<double> &b){
 double pIteration(vector<vector<double> > &a, int n){
 	vector<double> b (a.size(), 0);
 	b[0] = 1;
-	while(n){
+	while(n>0){
 		normalizar(b);
 		b = mult(a, b);
 		n--;

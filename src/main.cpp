@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <math.h>
 #include <set>
+#include <cmath>
 
 using namespace std;
 
@@ -182,4 +183,38 @@ int knn(const vector<pair<int, vector<double>>>& train, const vector<double>& ad
 	}
 
 	return ganador;
+}
+
+vector<double> mult(vector<vector<double> > &a, vector<double> &b){
+	vector<double> result (b.size(), 0);
+	for (int i = 0; i < b.size(); ++i)
+	{
+		for (int j = 0; j < a[i].size(); ++j)
+			result[i] += b[i]*a[i][j];
+	}
+	return result;
+}
+
+double norm(vector<double> &b){
+	double sol = 0;
+	for (int i = 0; i < b.size(); ++i)
+		sol += b[i]*b[i];
+	return sqrt(sol);
+}
+
+void normalizar(vector<double> &b){
+	double norma = norm(b);
+	for (int i = 0; i < b.size(); ++i)
+		b[i] /= norma;
+}
+
+double pIteration(vector<vector<double> > &a, int n){
+	vector<double> b (a.size(), 0);
+	b[0] = 1;
+	while(n){
+		normalizar(b);
+		b = mult(a, b);
+		n--;
+	}
+	return norm(b);
 }

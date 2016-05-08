@@ -215,6 +215,15 @@ vector<double> mult(vector<vector<double> > &a, vector<double> &b){
 	return result;
 }
 
+vector<vector<double> > xxt(vector<double> &v){
+	vector<vector<double> > sol (v.size(), vector<double> (v));
+	for (int i = 0; i < v.size(); ++i){
+		for (int j = 0; j < v.size(); ++j)
+			sol[i][j]+=v[i];
+	}
+	return sol;
+}
+
 void matSub(vector<vector<double> > &a, vector<vector<double> > &b){
 	for (int i = 0; i < a.size(); ++i){
 		for (int j = 0; j < a[j].size(); ++j)

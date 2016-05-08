@@ -12,7 +12,8 @@
 using namespace std;
 
 void trainMatrix(string train, int** ans, int K);
-double** toX(int** ans, int K);
+vector<vector<double>> toX(int** ans, int K);
+vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m);
 
 int main(int argc, char * argv[]){
 
@@ -77,14 +78,18 @@ int main(int argc, char * argv[]){
 	}
 	trainMatrix(train, ans, K);
 
-	double** x = toX(ans, K);
+	vector<vector<double>> x = toX(ans, K);
 
-	for(int y = 0; y < K; y++){
-		for(int z = 0; z < 784; z++){
-			cout << x[y][z] << " ";
-		}
-		cout << endl << endl;
-	}
+	vector<vector<double>> xt = trasponer(x, K, 784);
+
+	// vector<vector<double>> xtx = multiply(x, xt, )
+
+	// for(int y = 0; y < K; y++){
+	// 	for(int z = 0; z < 784; z++){
+	// 		cout << x[y][z] << " ";
+	// 	}
+	// 	cout << endl << endl;
+	// }
 
 
 }
@@ -111,7 +116,20 @@ void trainMatrix(string train, int** ans, int K){
 
 }
 
-double** toX(int** ans, int K){
+vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m){
+
+	vector<vector<double>> ans (m, vector<double> (n, 0));
+
+	for(int i = 0; i < n; i++){
+		for(int j = 0; j < m; j++){
+			ans[j][i] = matrix[i][j];
+		}
+	}
+
+	return ans;
+}
+
+vector<vector<double>> toX(int** ans, int K){
 
 	double average[784];
 
@@ -131,10 +149,10 @@ double** toX(int** ans, int K){
 		cout << average[b] << endl;
 	}
 
-	double** x = new double*[K];
-	for(int c = 0; c < K; c++){
-		x[c] = new double[784];
-	}
+	vector<vector<double>> x (K, vector<double> (784, 0));
+	// for(int c = 0; c < K; c++){
+	// 	x[c] = new vector<double>();
+	// }
 
 	double n = sqrt(K - 1);
 	for(int d = 0; d < K; d++){

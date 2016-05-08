@@ -257,3 +257,14 @@ vector<double> pIteration(vector<vector<double> > &a, int n){
 	}
 	return b;
 }
+
+vector<vector<double>> pca(vector<vector<double>> x, vector<vector<double>> y, int gama) {
+	for (int i = 0; i<gama; ++i) {
+		vector<vector<double>> m_i = multiplicar(multiplicar(multiplicar(traspuesta(x), y), traspuesta(y)), x);
+		vector<double> w_i = pIteration(m_i, 100);
+		normalizar(w_i);
+		vector<double> t_i = multiplicar(x, w_i);
+		normalizar(t_i);
+		
+	}
+}

@@ -210,16 +210,16 @@ void normalizar(vector<double> &b){
 		b[i] /= norma;
 }
 
-double pIteration(vector<vector<double> > &a, int n){
+vector<double> pIteration(vector<vector<double> > &a, int n){
 	vector<double> b;
 	b.reserve(a.size());
 	srand (time(NULL));
 	for (int i = 0; i < a.size(); ++i)
 		b.push_back((double)(rand() % 1007));
-	while(n){
+	while(n>0){
 		normalizar(b);
 		b = mult(a, b);
 		n--;
 	}
-	return norm(b);
+	return b;
 }

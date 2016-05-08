@@ -259,12 +259,16 @@ vector<double> pIteration(vector<vector<double> > &a, int n){
 }
 
 vector<vector<double>> pca(vector<vector<double>> x, vector<vector<double>> y, int gama) {
+	vector<vector<double>> w(x.size());
 	for (int i = 0; i<gama; ++i) {
-		vector<vector<double>> m_i = multiplicar(multiplicar(multiplicar(traspuesta(x), y), traspuesta(y)), x);
-		vector<double> w_i = pIteration(m_i, 100);
-		normalizar(w_i);
-		vector<double> t_i = multiplicar(x, w_i);
+		vector<vector<double>> m_i = multiply(multiply(multiply(trasponer(x, x.size(), x[0].size()), y), trasponer(y, y.size(), y[0].size()), x);
+		w[i] = pIteration(m_i, 100);
+		normalizar(w[i]);
+		vector<double> t_i = multiply(x, w[i]);
 		normalizar(t_i);
-		
+		vector<vector<double>> ttt = xxt(t_i);
+		matSub(x, multiply(ttt, x));
+		matSub(y, multiply(ttt, y));
 	}
+	return w;
 }

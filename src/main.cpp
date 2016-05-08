@@ -53,8 +53,8 @@ int main(int argc, char * argv[]){
 	 int crossK;
 
 	 input >> train;
-	 test = train + "/test.csv"
-	 train += "/train.csv"
+	 test = train + "/test.csv";
+	 train += "/train.csv";
 	 
 	 input >> kappa;
 	 input >> alpha;
@@ -215,6 +215,13 @@ vector<double> mult(vector<vector<double> > &a, vector<double> &b){
 	return result;
 }
 
+void matSub(vector<vector<double> > &a, vector<vector<double> > &b){
+	for (int i = 0; i < a.size(); ++i){
+		for (int j = 0; j < a[j].size(); ++j)
+			a[i][j] -= b[i][j];
+	}
+}
+
 double norm(vector<double> &b){
 	double sol = 0;
 	for (int i = 0; i < b.size(); ++i)
@@ -233,7 +240,7 @@ vector<double> pIteration(vector<vector<double> > &a, int n){
 	b.reserve(a.size());
 	srand (time(NULL));
 	for (int i = 0; i < a.size(); ++i)
-		b.push_back((double)(rand() % 1007));
+		b.push_back((double)(rand() % 1009));
 	while(n>0){
 		normalizar(b);
 		b = mult(a, b);

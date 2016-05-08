@@ -264,7 +264,7 @@ vector<vector<double>> pca(vector<vector<double>> x, vector<vector<double>> y, i
 		vector<vector<double>> m_i = multiply(multiply(multiply(trasponer(x, x.size(), x[0].size()), y), trasponer(y, y.size(), y[0].size()), x);
 		w[i] = pIteration(m_i, 100);
 		normalizar(w[i]);
-		vector<double> t_i = multiply(x, w[i]);
+		vector<double> t_i = mult(x, w[i]);
 		normalizar(t_i);
 		vector<vector<double>> ttt = xxt(t_i);
 		matSub(x, multiply(ttt, x));

@@ -8,6 +8,7 @@
 #include <math.h>
 #include <set>
 #include <cmath>
+#include <time.h>
 
 using namespace std;
 
@@ -18,57 +19,58 @@ vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m);
 int main(int argc, char * argv[]){
 
 //ESTO ESTA COMENTADO PORQUE NO ME ARMÉ NINGUN CASO COMPLETO DE INPUT, SIN EMBARGO LA FUNCION QUE ABRE UN ARCHIVO QUE TIENE VECTORES DE IMÁGENES Y LOS PARSEA ANDA
-	// string inputPath, outputPath; 
-	// int metodo; 
-	// cout << argc << endl;
-	// if (argc < 4){ 
-	// 	cout << "Input: ";
-	// 	cin >> inputPath;
-	// 	cout << "Output: ";
-	// 	cin >> outputPath; 
-	// 	cout << "Metodo (0|1|2): ";
-	// 	cin >> metodo;
-	// } else {
-	// 	inputPath = argv[1];
-	// 	outputPath = argv[2];
-	// 	metodo = atoi(argv[3]);
-	// 	cout << "Input: " << inputPath << endl;
-	// 	cout << "Output: " << outputPath << endl;
-	// 	cout << "Metodo: " << metodo << endl;
-	// 	if (!(metodo == 0 || metodo == 1 || metodo == 2))
-	// 		return 1;
-	// }
+	string inputPath, outputPath; 
+	 int metodo; 
+	 cout << argc << endl;
+	 if (argc < 4){ 
+	 	cout << "Input: ";
+	 	cin >> inputPath;
+	 	cout << "Output: ";
+	 	cin >> outputPath; 
+	 	cout << "Metodo (0|1|2): ";
+	 	cin >> metodo;
+	 } else {
+	 	inputPath = argv[1];
+	 	outputPath = argv[2];
+	 	metodo = atoi(argv[3]);
+	 	cout << "Input: " << inputPath << endl;
+	 	cout << "Output: " << outputPath << endl;
+	 	cout << "Metodo: " << metodo << endl;
+	 	if (!(metodo == 0 || metodo == 1 || metodo == 2))
+	 		return 1;
+	 }
 
-	// ifstream input;
-	// ofstream output;
-	// input.open(inputPath);
-	// output.open(outputPath);
+	 ifstream input;
+	 ofstream output;
+	 input.open(inputPath);
+	 output.open(outputPath);
 
-	// string train;
-	// string test;
-	// int kappa;
-	// int alpha;
-	// int gamma;
-	// int crossK;
+	 string train;
+	 string test;
+	 int kappa;
+	 int alpha;
+	 int gamma;
+	 int crossK;
 
-	// input >> train;
-	// input >> test;
-	// input >> kappa;
-	// input >> alpha;
-	// input >> gamma;
-	// input >> crossK;
+	 input >> train;
+	 test = train + "/test.csv"
+	 train += "/train.csv"
+	 
+	 input >> kappa;
+	 input >> alpha;
+	 input >> gamma;
+	 input >> crossK;
 
-	// bool partitions[crossK][42000];
+	 bool partitions[crossK][42000];
 
-	// for(int i = 0; i < crossK; i++){
-	// 	for(int j = 0; j < 42000; j++){
-	// 		input >> partitions[i][j];
-	// 	}
-	// }
+	 for(int i = 0; i < crossK; i++){
+	 	for(int j = 0; j < 42000; j++)
+	 		input >> partitions[i][j];
+	 }
 
-	cout << "enter funcion" << endl;
+	/*cout << "enter funcion" << endl;
 	string train;
-	cin >> train;
+	cin >> train;*/
 
 	int K = 42000;
 	//trasformamos train en una matriz donde cada fila tiene el label del digito en la primer columna y 784 columnas más con los pixels
@@ -208,7 +210,7 @@ vector<double> mult(vector<vector<double> > &a, vector<double> &b){
 	for (int i = 0; i < b.size(); ++i)
 	{
 		for (int j = 0; j < a[i].size(); ++j)
-			result[i] += b[i]*a[i][j];
+			result[i] += b[j]*a[i][j];
 	}
 	return result;
 }
@@ -226,13 +228,16 @@ void normalizar(vector<double> &b){
 		b[i] /= norma;
 }
 
-double pIteration(vector<vector<double> > &a, int n){
-	vector<double> b (a.size(), 0);
-	b[0] = 1;
+vector<double> pIteration(vector<vector<double> > &a, int n){
+	vector<double> b;
+	b.reserve(a.size());
+	srand (time(NULL));
+	for (int i = 0; i < a.size(); ++i)
+		b.push_back((double)(rand() % 1007));
 	while(n>0){
 		normalizar(b);
 		b = mult(a, b);
 		n--;
 	}
-	return norm(b);
+	return b;
 }

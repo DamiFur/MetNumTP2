@@ -15,6 +15,7 @@ using namespace std;
 void trainMatrix(string train, int** ans, int K);
 vector<vector<double>> toX(int** ans, int K);
 vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m);
+vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> xt);
 
 int main(int argc, char * argv[]){
 
@@ -84,7 +85,7 @@ int main(int argc, char * argv[]){
 
 	vector<vector<double>> xt = trasponer(x, K, 784);
 
-	// vector<vector<double>> xtx = multiply(x, xt, )
+	vector<vector<double>> xtx = multiply(x, xt);
 
 	// for(int y = 0; y < K; y++){
 	// 	for(int z = 0; z < 784; z++){
@@ -167,10 +168,28 @@ vector<vector<double>> toX(int** ans, int K){
 
 }
 
+vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> xt){
+	int n = x.size();
+	int m = x[0].size();
+
+	vector<vector<double>> ans (m, vector<double> (m, 0));
+
+	for(int i = 0; i < m; i++){
+		for(int j = 0; j < m; j++){
+			for(int k = 0; k < n; k++){
+				ans[i][j] += xt[i][k] * x[k][j];
+			}
+		}
+		cout << "una linea menos: " << i << endl;
+	}
+
+	return ans;
+
+}
+
 #define cuad(x) ((x)*(x))
 double distancia(const vector<double>& v1, const vector<double>& v2) {
 	double ret = 0.0;
-
 	for (int i = 0; i<v1.size(); ++i) {
 		ret += cuad(v1[i]-v2[i]);
 	}

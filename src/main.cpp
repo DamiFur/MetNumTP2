@@ -8,6 +8,7 @@
 #include <math.h>
 #include <set>
 #include <cmath>
+#include <time.h>
 
 using namespace std;
 
@@ -190,7 +191,7 @@ vector<double> mult(vector<vector<double> > &a, vector<double> &b){
 	for (int i = 0; i < b.size(); ++i)
 	{
 		for (int j = 0; j < a[i].size(); ++j)
-			result[i] += b[i]*a[i][j];
+			result[i] += b[j]*a[i][j];
 	}
 	return result;
 }
@@ -209,9 +210,12 @@ void normalizar(vector<double> &b){
 }
 
 double pIteration(vector<vector<double> > &a, int n){
-	vector<double> b (a.size(), 0);
-	b[0] = 1;
-	while(n>0){
+	vector<double> b;
+	b.reserve(a.size());
+	srand (time(NULL));
+	for (int i = 0; i < a.size(); ++i)
+		b.push_back((double)(rand() % 1007));
+	while(n){
 		normalizar(b);
 		b = mult(a, b);
 		n--;

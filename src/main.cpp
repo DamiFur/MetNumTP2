@@ -53,15 +53,19 @@ int main(int argc, char * argv[]){
 	 int gamma;
 	 int crossK;
 
+	// Referencia a los archivos
 	 input >> train;
 	 test = train + "/test.csv";
 	 train += "/train.csv";
 	 
+	// Variables de tuneo
 	 input >> kappa;
 	 input >> alpha;
 	 input >> gamma;
 	 input >> crossK;
 
+	// Matriz de bools para ver cuales son los casos de train y test sobre train.csv
+	// peligroso en memoria
 	 bool partitions[crossK][42000];
 
 	 for(int i = 0; i < crossK; i++){
@@ -75,6 +79,7 @@ int main(int argc, char * argv[]){
 
 	int K = 42000;
 	//trasformamos train en una matriz donde cada fila tiene el label del digito en la primer columna y 784 columnas más con los pixels
+	// char * quizas sea mejor
 	int* ans[K];
 	for(int i = 0; i < K; i++){
 		ans[i] = new int[785];
@@ -132,6 +137,58 @@ vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m){
 	return ans;
 }
 
+vector<vector<double> > X_K(const int ** const ans, const int K, const bool ** const partition){
+	// K es la linea de partition a tener en cuenta
+	int image_size = 784;
+	int db_size = 42000;
+	int count_train= 0;
+	double average[image_size];
+	for (int i = 0; i < image_size; i++){
+		average[i] = 0.0;
+	}
+	for (int i = 0; i < image_size; i++){
+		for (int j = 0; j < db_size; j++){
+			if (partition[K][j] == true{
+				average[i] += (double) ans[j][i+1];
+				++count_train;
+			}
+		}
+	}
+	for (int i = 0; i < image_size; i++){
+		average[i] /= (double) count_train;
+	}
+	vector<vector<double>> x (count_train, vector<double> (image_size,0);
+	int added = 0;
+	for (int j = 0; j < image_size; j++){
+		for (i = 0; i < db_size && added < count_train; i++){
+			if (partition[K][added] == true{
+				// j+1 para descartar el label
+				x[added][j] = ans[i][j+1] - average[j];
+				++added;
+			}
+		}
+	}
+	return x;
+	// Devuelve x
+	// n es x.size()
+	// M_K = 1/(n-1) * (x' * x) 
+	// o tambien:
+	// M_K = (x' * x) / ((x.size()) - 1)
+	
+}
+
+vector<vector<double> > PCA_M_K(const vector<const vector<double> > X_K){
+	// Asumiendo X_K correcta, multiply correcta y trasponer correcta
+	vector<vector<double> > M;
+	M = multiply(trasponer(X_K, X_K.size(), X_K[0].size), x);
+	int n = X_K.size() - 1;
+	for (int i = 0; i < M.size(); i++){
+		for (int j = 0; j < M.size(); j++){
+			M[i][j] /= (double) n;
+		}
+	}
+
+}
 vector<vector<double>> toX(int** ans, int K){
 
 	double average[784];

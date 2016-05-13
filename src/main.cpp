@@ -14,7 +14,8 @@ using namespace std;
 
 void trainMatrix(string train, int** ans, int K);
 vector<vector<double>> toX(int** ans, int K);
-vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m);
+//vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m);
+vector<vector<double>> trasponer(vector<vector<double>> matrix);
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> xt);
 
 int main(int argc, char * argv[]){
@@ -88,7 +89,8 @@ int main(int argc, char * argv[]){
 
 	vector<vector<double>> x = toX(ans, K);
 
-	vector<vector<double>> xt = trasponer(x, K, 784);
+	//vector<vector<double>> xt = trasponer(x, K, 784);
+	vector<vector<double>> xt = trasponer(x);
 
 	vector<vector<double>> xtx = multiply(x, xt);
 
@@ -124,7 +126,10 @@ void trainMatrix(string train, int** ans, int K){
 
 }
 
-vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m){
+//vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m){
+vector<vector<double>> trasponer(vector<vector<double>> matrix){
+	size_t n = matrix.size();
+	size_t m = (matrix[0]).size();
 
 	vector<vector<double>> ans (m, vector<double> (n, 0));
 
@@ -148,7 +153,7 @@ vector<vector<double> > X_K(const int ** const ans, const int K, const bool ** c
 	}
 	for (int i = 0; i < image_size; i++){
 		for (int j = 0; j < db_size; j++){
-			if (partition[K][j] == true{
+			if (partition[K][j] == true){
 				average[i] += (double) ans[j][i+1];
 				++count_train;
 			}
@@ -157,11 +162,11 @@ vector<vector<double> > X_K(const int ** const ans, const int K, const bool ** c
 	for (int i = 0; i < image_size; i++){
 		average[i] /= (double) count_train;
 	}
-	vector<vector<double>> x (count_train, vector<double> (image_size,0);
+	vector<vector<double>> x (count_train, vector<double> (image_size,0));
 	int added = 0;
 	for (int j = 0; j < image_size; j++){
-		for (i = 0; i < db_size && added < count_train; i++){
-			if (partition[K][added] == true{
+		for (int i = 0; i < db_size && added < count_train; i++){
+			if (partition[K][added] == true){
 				// j+1 para descartar el label
 				x[added][j] = ans[i][j+1] - average[j];
 				++added;
@@ -177,10 +182,11 @@ vector<vector<double> > X_K(const int ** const ans, const int K, const bool ** c
 	
 }
 
-vector<vector<double> > PCA_M_K(const vector<const vector<double> > X_K){
+vector<vector<double> > PCA_M_K(vector<vector<double> > X_K){
 	// Asumiendo X_K correcta, multiply correcta y trasponer correcta
 	vector<vector<double> > M;
-	M = multiply(trasponer(X_K, X_K.size(), X_K[0].size), x);
+	//M = multiply(trasponer(X_K, X_K.size(), (X_K[0]).size), X_K);
+	M = multiply(trasponer(X_K), X_K);
 	int n = X_K.size() - 1;
 	for (int i = 0; i < M.size(); i++){
 		for (int j = 0; j < M.size(); j++){
@@ -337,7 +343,8 @@ vector<double> pIteration(vector<vector<double> > &a, int n){
 vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama) {
 	vector<vector<double>> w(x.size());
 	for (int i = 0; i<gama; ++i) {
-		vector<vector<double>> m_i = multiply(multiply(multiply(trasponer(x, x.size(), x[0].size()), y), trasponer(y, y.size(), y[0].size())), x);
+		//vector<vector<double>> m_i = multiply(multiply(multiply(trasponer(x, x.size(), x[0].size()), y), trasponer(y, y.size(), y[0].size())), x);
+		vector<vector<double>> m_i = multiply(multiply(multiply(trasponer(x), y), trasponer(y)), x);
 		w[i] = pIteration(m_i, 100);
 		normalizar(w[i]);
 		vector<double> t_i = mult(x, w[i]);

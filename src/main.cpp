@@ -18,91 +18,94 @@ vector<vector<double>> toX(int** ans, int K);
 vector<vector<double>> trasponer(vector<vector<double>> matrix);
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> xt);
 
-int main(int argc, char * argv[]){
+// int main(int argc, char * argv[]){
 
-//ESTO ESTA COMENTADO PORQUE NO ME ARMÉ NINGUN CASO COMPLETO DE INPUT, SIN EMBARGO LA FUNCION QUE ABRE UN ARCHIVO QUE TIENE VECTORES DE IMÁGENES Y LOS PARSEA ANDA
-	string inputPath, outputPath; 
-	 int metodo; 
-	 cout << argc << endl;
-	 if (argc < 4){ 
-	 	cout << "Input: ";
-	 	cin >> inputPath;
-	 	cout << "Output: ";
-	 	cin >> outputPath; 
-	 	cout << "Metodo (0|1|2): ";
-	 	cin >> metodo;
-	 } else {
-	 	inputPath = argv[1];
-	 	outputPath = argv[2];
-	 	metodo = atoi(argv[3]);
-	 	cout << "Input: " << inputPath << endl;
-	 	cout << "Output: " << outputPath << endl;
-	 	cout << "Metodo: " << metodo << endl;
-	 	if (!(metodo == 0 || metodo == 1 || metodo == 2))
-	 		return 1;
-	 }
+// //ESTO ESTA COMENTADO PORQUE NO ME ARMÉ NINGUN CASO COMPLETO DE INPUT, SIN EMBARGO LA FUNCION QUE ABRE UN ARCHIVO QUE TIENE VECTORES DE IMÁGENES Y LOS PARSEA ANDA
+// 	string inputPath, outputPath; 
+// 	 int metodo; 
+// 	 cout << argc << endl;
+// 	 if (argc < 4){ 
+// 	 	cout << "Input: ";
+// 	 	cin >> inputPath;
+// 	 	cout << "Output: ";
+// 	 	cin >> outputPath; 
+// 	 	cout << "Metodo (0|1|2): ";
+// 	 	cin >> metodo;
+// 	 } else {
+// 	 	inputPath = argv[1];
+// 	 	outputPath = argv[2];
+// 	 	metodo = atoi(argv[3]);
+// 	 	cout << "Input: " << inputPath << endl;
+// 	 	cout << "Output: " << outputPath << endl;
+// 	 	cout << "Metodo: " << metodo << endl;
+// 	 	if (!(metodo == 0 || metodo == 1 || metodo == 2))
+// 	 		return 1;
+// 	 }
 
-	 ifstream input;
-	 ofstream output;
-	 input.open(inputPath);
-	 output.open(outputPath);
+// 	 ifstream input;
+// 	 ofstream output;
+// 	 input.open(inputPath);
+// 	 output.open(outputPath);
 
-	 string train;
-	 string test;
-	 int kappa;
-	 int alpha;
-	 int gamma;
-	 int crossK;
+// 	 string train;
+// 	 string test;
+// 	 int kappa;
+// 	 int alpha;
+// 	 int gamma;
+// 	 int crossK;
 
-	// Referencia a los archivos
-	 input >> train;
-	 test = train + "/test.csv";
-	 train += "/train.csv";
+// 	// Referencia a los archivos
+// 	 input >> train;
+// 	 test = train + "/test.csv";
+// 	 train += "/train.csv";
 	 
-	// Variables de tuneo
-	 input >> kappa;
-	 input >> alpha;
-	 input >> gamma;
-	 input >> crossK;
+// 	// Variables de tuneo
+// 	 input >> kappa;
+// 	 input >> alpha;
+// 	 input >> gamma;
+// 	 input >> crossK;
 
-	// Matriz de bools para ver cuales son los casos de train y test sobre train.csv
-	// peligroso en memoria
-	 bool partitions[crossK][42000];
+// 	// Matriz de bools para ver cuales son los casos de train y test sobre train.csv
+// 	// peligroso en memoria
+// 	 bool partitions[crossK][42000];
 
-	 for(int i = 0; i < crossK; i++){
-	 	for(int j = 0; j < 42000; j++)
-	 		input >> partitions[i][j];
-	 }
+// 	 for(int i = 0; i < crossK; i++){
+// 	 	for(int j = 0; j < 42000; j++)
+// 	 		input >> partitions[i][j];
+// 	 }
 
-	/*cout << "enter funcion" << endl;
-	string train;
-	cin >> train;*/
+// 	/*cout << "enter funcion" << endl;
+// 	string train;
+// 	cin >> train;*/
 
-	int K = 42000;
-	//trasformamos train en una matriz donde cada fila tiene el label del digito en la primer columna y 784 columnas más con los pixels
-	// char * quizas sea mejor
-	int* ans[K];
-	for(int i = 0; i < K; i++){
-		ans[i] = new int[785];
-	}
-	trainMatrix(train, ans, K);
+// 	int K = 42000;
+// 	//trasformamos train en una matriz donde cada fila tiene el label del digito en la primer columna y 784 columnas más con los pixels
+// 	// char * quizas sea mejor
+// 	int* ans[K];
+// 	for(int i = 0; i < K; i++){
+// 		ans[i] = new int[785];
+// 	}
+// 	trainMatrix(train, ans, K);
 
-	vector<vector<double>> x = toX(ans, K);
+// 	vector<vector<double>> images = toImageVector(ans, K);
 
-	//vector<vector<double>> xt = trasponer(x, K, 784);
-	vector<vector<double>> xt = trasponer(x);
+// 	vector<vector<double>> x = toX(ans, K);
 
-	vector<vector<double>> xtx = multiply(x, xt);
+// 	vector<vector<double>> xt = trasponer(x);
 
-	// for(int y = 0; y < K; y++){
-	// 	for(int z = 0; z < 784; z++){
-	// 		cout << x[y][z] << " ";
-	// 	}
-	// 	cout << endl << endl;
-	// }
+// 	vector<vector<double>> xtx = multiply(x, xt);
+
+// 	// vector<vector<double>> tcpca = characteristic_transformation(, ans);
+
+// 	// for(int y = 0; y < K; y++){
+// 	// 	for(int z = 0; z < 784; z++){
+// 	// 		cout << x[y][z] << " ";
+// 	// 	}
+// 	// 	cout << endl << endl;
+// 	// }
 
 
-}
+// }
 
 void trainMatrix(string train, int** ans, int K){
 
@@ -123,6 +126,19 @@ void trainMatrix(string train, int** ans, int K){
 			ss >> ans[i][j];
 		}
 	}
+
+}
+
+vector<vector<double>> toImageVector(int** matrix, int K){
+	vector<vector<double>> ans (K, vector<double> (784));
+
+	for(int i = 0; i < K; i++){
+		for(int j = 0; j < 784; j++){
+			ans[i][j] = matrix[i][j + 1];
+		}
+	}
+
+	return ans;
 
 }
 
@@ -250,6 +266,24 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
 
 }
 
+vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<double>> images){
+	int n = images.size();
+	int alpha = eigenvectors.size();
+
+	vector<vector<double>> ans (n, vector<double> (alpha, 0));
+
+	for(int i = 0; i < n; i++){
+		for(int j = 0; j < alpha; j++){
+			for(int a = 0; a < 784; a++){
+				ans[i][j] += images[i][a] * eigenvectors[j][a];
+			}
+		}
+	}
+
+	return ans;
+
+}
+
 #define cuad(x) ((x)*(x))
 double distancia(const vector<double>& v1, const vector<double>& v2) {
 	double ret = 0.0;
@@ -301,7 +335,7 @@ vector<vector<double> > xxt(vector<double> &v){
 	vector<vector<double> > sol (v.size(), vector<double> (v));
 	for (int i = 0; i < v.size(); ++i){
 		for (int j = 0; j < v.size(); ++j)
-			sol[i][j]+=v[i];
+			sol[i][j]*=v[i];
 	}
 	return sol;
 }
@@ -340,20 +374,81 @@ vector<double> pIteration(vector<vector<double> > &a, int n){
 	return b;
 }
 
+void multConst(vector<vector<double> > &a, double n){
+    for (int i = 0; i < a.size(); ++i){
+        for (int j = 0; j < a.size(); ++j)
+            a[i][j]*=n;
+    }
+}
+ 
+vector<vector<double> > deflate(vector<vector<double> > mat, int alpha){
+    vector<vector<double> > sol (alpha, vector<double> (mat.size()));
+    vector<vector<double> > transp (mat.size(), vector<double> (mat.size()));
+    for (int i = 0; i < alpha; ++i)
+    {
+        std::vector<double> autov = pIteration(mat, 2048);
+        double norma = norm(autov);
+        normalizar(autov);
+        for(int o = 0; o < mat.size(); o++){
+        	cout << " " << autov[o];
+        }
+        sol[i] = autov;
+        transp = xxt(autov);
+        multConst(transp, norma);
+        cout << norma << endl;
+        matSub(mat, transp);
+    }
+    return sol;
+}
+ 
 vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama) {
-	vector<vector<double>> w(x.size());
-	for (int i = 0; i<gama; ++i) {
-		//vector<vector<double>> m_i = multiply(multiply(multiply(trasponer(x, x.size(), x[0].size()), y), trasponer(y, y.size(), y[0].size())), x);
-		vector<vector<double>> m_i = multiply(multiply(multiply(trasponer(x), y), trasponer(y)), x);
-		w[i] = pIteration(m_i, 100);
-		normalizar(w[i]);
-		vector<double> t_i = mult(x, w[i]);
-		normalizar(t_i);
-		vector<vector<double>> ttt = xxt(t_i);
-		vector<vector<double>> xt = multiply(ttt, x);
-		matSub(x, xt);
-		vector<vector<double>> yt = multiply(ttt, y);
-		matSub(y, yt);
-	}
-	return w;
+    vector<vector<double>> w(x.size());
+    for (int i = 0; i<gama; ++i) {
+        //vector<vector<double>> m_i = multiply(multiply(multiply(trasponer(x, x.size(), x[0].size()), y), trasponer(y, y.size(), y[0].size())), x);
+        vector<vector<double>> m_i = multiply(multiply(multiply(trasponer(x), y), trasponer(y)), x);
+        w[i] = pIteration(m_i, 100);
+        normalizar(w[i]);
+        vector<double> t_i = mult(x, w[i]);
+        normalizar(t_i);
+        vector<vector<double>> ttt = xxt(t_i);
+        vector<vector<double>> xt = multiply(ttt, x);
+        matSub(x, xt);
+        vector<vector<double>> yt = multiply(ttt, y);
+        matSub(y, yt);
+    }
+    return w;
+}
+
+int main(){
+ 
+    int n;
+    cin >> n;
+    std::vector<std::vector<double> > asd (n, std::vector<double> (n));
+    double tmp;
+ 
+ 
+    for (int i = 0; i < n; ++i)
+    {
+        for (int j = 0; j < n; ++j)
+        {
+            cin >> tmp;
+            asd[i][j] = tmp;
+        }
+    }
+ 
+ 
+    std::vector<std::vector<double> > sol = deflate(asd, n);
+ 
+    cout << endl << 3 << endl;
+ 
+    for (int i = 0; i < n; ++i)
+    {
+        for (int j = 0; j < n; ++j)
+        {
+            cout << sol[i][j] << " ";
+        }
+        cout << endl;
+    }
+ 
+    return 0;
 }

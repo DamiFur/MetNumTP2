@@ -21,17 +21,18 @@ using namespace std;
 int image_size = IMAGE_SIZE;
 int db_size = DB_SIZE;
 
-void trainMatrix(string train, vector<vector<int>>& ans, int K);
-vector<vector<double>> toX(vector<vector<int>>& ans, int K);
+void trainMatrix(string train, vector<vector<double>>& ans, int K);
+vector<vector<double>> toX(vector<vector<double>>& ans, int K);
 //vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m);
 vector<vector<double>> trasponer(vector<vector<double>> matrix);
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y);
 //vector<vector<double> > toX_K(const int ** const ans, const int K, const bool ** const partition);
-vector<vector<double> > toX_K(vector<vector<int>>& ans, const int K, vector<vector<bool>>& partition);
+vector<vector<double> > toX_K(vector<vector<double>>& ans, const int K, vector<vector<bool>>& partition);
 vector<vector<double> > PCA_M_K(vector<vector<double> > X_K);
 void print(vector<vector<int> >& M , ostream& out, const string caption, const char sep);
 void print(vector<vector<double> >& M, ostream& out, const string caption, const char sep);
 void print(int ** M, int m, int n, ostream& out, const string caption, const char sep);
+vector<vector<double>> filtrarPartition(const vector<vector<double>>& x, const vector<vector<bool>>& partition, int k);
 
 int main(int argc, char * argv[]){
 
@@ -115,12 +116,15 @@ int main(int argc, char * argv[]){
 	int K = db_size;
 	//trasformamos train en una matriz donde cada fila tiene el label del digito en la primer columna y 784 columnas más con los pixels
 	// char * quizas sea mejor
-	vector<vector<int>> ans(K, vector<int>(image_size + 1));
+	vector<vector<double>> ans(K, vector<double>(image_size + 1));
 
 	trainMatrix(train, ans, K);
-	vector<vector<double>> x = toX(ans, K);
 
-	if (metodo == 3){
+	if (metodo == 0) {
+		vector<vector<double>> x = filtrarPartition(ans, partitions, K);
+
+	}else if (metodo == 3){
+		vector<vector<double>> x = toX(ans, K);
 		//const char sep = ';';
 		//print(x, cout, caption, sep);
 		//print(x, cout, "Matriz x", ';');
@@ -164,7 +168,19 @@ int main(int argc, char * argv[]){
 
 }
 
-void trainMatrix(string train, vector<vector<int>>& ans, int K){
+vector<vector<double>> filtrarPartition(const vector<vector<double>>& x, const vector<vector<bool>>& partition, int k) {
+	// Filtra por partition y ademas convierte a double
+	vector<vector<double>> ret;
+
+	for (int i = 0; i < x.size(); ++i) {
+		if (partition[k][i]) {
+			ret.push_back(x[i]);
+		}
+	}
+	return ret;
+}
+
+void trainMatrix(string train, vector<vector<double>>& ans, int K){
 
 	ifstream input;
 	input.open(train);
@@ -202,7 +218,7 @@ vector<vector<double>> trasponer(vector<vector<double>> matrix){
 	return ans;
 }
 
-vector<vector<double> > toX_K(vector<vector<int>>& ans, int K, vector<vector<bool>>& partition){
+vector<vector<double> > toX_K(vector<vector<double>>& ans, int K, vector<vector<bool>>& partition){
 	// K es la linea de partition a tener en cuenta
 	// partition, la matriz de bool
 	//int image_size = 784;
@@ -262,7 +278,7 @@ vector<vector<double> > PCA_M_K(vector<vector<double> > X_K){
 	}
 	return M;
 }
-vector<vector<double>> toX(vector<vector<int>>& ans, int K){
+vector<vector<double>> toX(vector<vector<double>>& ans, int K){
 
 	double average[image_size];
 
@@ -325,19 +341,20 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
 
 #define cuad(x) ((x)*(x))
 double distancia(const vector<double>& v1, const vector<double>& v2) {
+	// en v1[0] esta el label asi que hay que comparar v1[i+1] con v2[i]
 	double ret = 0.0;
 	for (int i = 0; i<v1.size(); ++i) {
-		ret += cuad(v1[i]-v2[i]);
+		ret += cuad(v1[i+1]-v2[i]);
 	}
 	return sqrt(ret);
 }
 
-int knn(const vector<pair<int, vector<double>>>& train, const vector<double>& adivinar, int k) {
+int knn(const vector<vector<double>>& train, const vector<double>& adivinar, int k) {
 
 	set<pair<double, int>> dist_index;
 
 	for (int i = 0; i<train.size(); ++i) {
-		dist_index.insert(make_pair(distancia(train[i].second, adivinar), train[i].first));
+		dist_index.insert(make_pair(distancia(train[i], adivinar), train[i][0]));
 		if (dist_index.size() > k) {
 			auto ulti = dist_index.end();
 			ulti--;

@@ -416,8 +416,8 @@ vector<double> pIteration(vector<vector<double> > &a, int n){
 vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama) {
 	vector<vector<double>> w(x.size());
 	for (int i = 0; i<gama; ++i) {
-		//vector<vector<double>> m_i = multiply(multiply(multiply(trasponer(x),y),trasponer(y)),x);
-		vector<vector<double>> m_i = multiply(x, multiply(trasponer(y), multiply(y, trasponer(x))));
+		vector<vector<double>> m_i = multiply(multiply(multiply(trasponer(x),y),trasponer(y)),x);
+		//vector<vector<double>> m_i = multiply(x, multiply(trasponer(y), multiply(y, trasponer(x))));
 		w[i] = pIteration(m_i, 100);
 		normalizar(w[i]);
 		vector<double> t_i = mult(x, w[i]);

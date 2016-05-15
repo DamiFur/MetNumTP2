@@ -1,0 +1,8 @@
+Para probar con el test minimal
+
+Ejecutar parado en src con los siguientes parametros
+testmin/test1.in (input file)
+testmin/test1.out (output file)
+3 (metodo de testeo basico)
+15 (tamaño de la base de train en ../datamin)
+10 (cantidad de pixeles por imagen)

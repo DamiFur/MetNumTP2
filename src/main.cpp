@@ -20,6 +20,7 @@ using namespace std;
 #define IMAGE_SIZE 784
 int image_size = IMAGE_SIZE;
 int db_size = DB_SIZE;
+const int K_DE_KNN = 10;
 
 void trainMatrix(string train, vector<vector<double>>& ans, int K);
 vector<vector<double>> toX(vector<vector<double>>& ans, int K);
@@ -33,6 +34,7 @@ void print(vector<vector<int> >& M , ostream& out, const string caption, const c
 void print(vector<vector<double> >& M, ostream& out, const string caption, const char sep);
 void print(int ** M, int m, int n, ostream& out, const string caption, const char sep);
 vector<vector<double>> filtrarPartition(const vector<vector<double>>& x, const vector<vector<bool>>& partition, int k);
+int knn(const vector<vector<double>>& train, const vector<double>& adivinar, int k);
 
 int main(int argc, char * argv[]){
 
@@ -77,6 +79,8 @@ int main(int argc, char * argv[]){
 
 	 ifstream input;
 	 ofstream output;
+	 ofstream reconocimiento;
+	 reconocimiento.open("reconocimiento.txt");
 	 input.open(inputPath);
 	 output.open(outputPath);
 
@@ -122,7 +126,17 @@ int main(int argc, char * argv[]){
 
 	if (metodo == 0) {
 		vector<vector<double>> x = filtrarPartition(ans, partitions, K);
-
+		double acertados = 0, total = 0;
+		for(int i = 0; i<partitions.size(); ++i) {
+			if (!partitions[K][i]) {
+				int guess = knn(ans, x[i], K_DE_KNN);
+				total++;
+				if (guess == x[i][0]) {
+					acertados++;
+				}
+			}
+		}
+		reconocimiento << acertados / total << endl;
 	}else if (metodo == 3){
 		vector<vector<double>> x = toX(ans, K);
 		//const char sep = ';';

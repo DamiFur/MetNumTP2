@@ -21,13 +21,13 @@ using namespace std;
 int image_size = IMAGE_SIZE;
 int db_size = DB_SIZE;
 
-void trainMatrix(string train, int** ans, int K);
-vector<vector<double>> toX(int** ans, int K);
+void trainMatrix(string train, vector<vector<int>>& ans, int K);
+vector<vector<double>> toX(vector<vector<int>>& ans, int K);
 //vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m);
 vector<vector<double>> trasponer(vector<vector<double>> matrix);
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y);
 //vector<vector<double> > toX_K(const int ** const ans, const int K, const bool ** const partition);
-vector<vector<double> > toX_K(int ** ans, const int K, bool ** partition);
+vector<vector<double> > toX_K(vector<vector<int>>& ans, const int K, vector<vector<bool>>& partition);
 vector<vector<double> > PCA_M_K(vector<vector<double> > X_K);
 void print(vector<vector<int> >& M , ostream& out, const string caption, const char sep);
 void print(vector<vector<double> >& M, ostream& out, const string caption, const char sep);
@@ -98,16 +98,14 @@ int main(int argc, char * argv[]){
 	 input >> crossK;
 
 	// Matriz de bools para ver cuales son los casos de train y test sobre train.csv
-	// peligroso en memoria
-	//bool partitions[crossK][db_size];
-	bool * partitions[crossK];
-	for (int i = 0; i < crossK; i++){
-		partitions[i] = new bool[db_size];
-	}
+	vector<vector<bool>> partitions(crossK, vector<bool>(db_size));
 
 	for(int i = 0; i < crossK; i++){
-		for(int j = 0; j < db_size; j++)
-			input >> partitions[i][j];
+		for(int j = 0; j < db_size; j++){
+			string str_bool;
+			input >> str_bool;
+			partitions[i][j] = (str_bool == "1");
+		}
 	}
 
 	/*cout << "enter funcion" << endl;
@@ -117,10 +115,7 @@ int main(int argc, char * argv[]){
 	int K = db_size;
 	//trasformamos train en una matriz donde cada fila tiene el label del digito en la primer columna y 784 columnas más con los pixels
 	// char * quizas sea mejor
-	int* ans[K];
-	for(int i = 0; i < K; i++){
-		ans[i] = new int[image_size + 1];
-	}
+	vector<vector<int>> ans(K, vector<int>(image_size + 1));
 
 	trainMatrix(train, ans, K);
 	vector<vector<double>> x = toX(ans, K);
@@ -131,7 +126,7 @@ int main(int argc, char * argv[]){
 		//print(x, cout, "Matriz x", ';');
 		ostringstream oss;
 
-		print(ans,K,image_size +1, output, "Matriz Ans", ' ');
+		print(ans, output, "Matriz Ans", ' ');
 		print(x, output, "Matriz x", ' ');
 		//vector<vector<double> > M;
 		for (int i = 0; i < crossK; i++){
@@ -169,7 +164,7 @@ int main(int argc, char * argv[]){
 
 }
 
-void trainMatrix(string train, int** ans, int K){
+void trainMatrix(string train, vector<vector<int>>& ans, int K){
 
 	ifstream input;
 	input.open(train);
@@ -207,7 +202,7 @@ vector<vector<double>> trasponer(vector<vector<double>> matrix){
 	return ans;
 }
 
-vector<vector<double> > toX_K(int ** const ans, int K, bool ** partition){
+vector<vector<double> > toX_K(vector<vector<int>>& ans, int K, vector<vector<bool>>& partition){
 	// K es la linea de partition a tener en cuenta
 	// partition, la matriz de bool
 	//int image_size = 784;
@@ -267,7 +262,7 @@ vector<vector<double> > PCA_M_K(vector<vector<double> > X_K){
 	}
 	return M;
 }
-vector<vector<double>> toX(int** ans, int K){
+vector<vector<double>> toX(vector<vector<int>>& ans, int K){
 
 	double average[image_size];
 

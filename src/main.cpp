@@ -154,9 +154,11 @@ int main(int argc, char * argv[]){
 			vector<vector<double> > P = PCA_M_K(M);
 			string caption = "Matriz x_k" + to_string(i);
 			print (M, output, caption, ' ');
+			caption = "Matriz x_k" + to_string(i) + " traspuesta";
 			print(N, output, caption, ' ');
+			caption = "Matriz (x_k" + to_string(i) + ")t * x_k" + to_string(i);
 			print(NM, output, caption, ' ');
-			print(P, output, caption, ' ');
+			//print(P, output, caption, ' ');
 			
 		}
 		return 0;

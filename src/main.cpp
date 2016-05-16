@@ -158,7 +158,9 @@ int main(int argc, char * argv[]){
 			print(N, output, caption, ' ');
 			caption = "Matriz (x_k" + to_string(i) + ")t * x_k" + to_string(i);
 			print(NM, output, caption, ' ');
-			//print(P, output, caption, ' ');
+			caption = "Matriz x_k" + to_string(i) + " PCA - Matriz(M)";
+			print(P, output, caption, ' ');
+
 			
 		}
 		return 0;

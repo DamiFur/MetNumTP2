@@ -62,6 +62,14 @@ for i = 1 : 3
 
 	% Escribir x_k<i> traspuesta
 	dlmwrite(output, ((X_i{i})' * X_i{i}), '-append', 'delimiter', ' ') 
+
+	% Escribir Header x_k<i> PCA 
+	fid = fopen(output, 'at')
+	fprintf(fid, '\nMatriz x_k%i PCA - Matriz(M)\n', i-1)
+	fclose(fid)
+
+	% Escribir x_k<i> traspuesta
+	dlmwrite(output, ( ((X_i{i})' * X_i{i}) / (size(X_i{i},1) -1)), '-append', 'delimiter', ' ') 
 end
 % Una linea extra para el diff
 fid = fopen(output, 'at')

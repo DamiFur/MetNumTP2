@@ -381,21 +381,17 @@ void multConst(vector<vector<double> > &a, double n){
     }
 }
  
-vector<vector<double> > deflate(vector<vector<double> > mat, int alpha){
-    vector<vector<double> > sol (alpha, vector<double> (mat.size()));
-    vector<vector<double> > transp (mat.size(), vector<double> (mat.size()));
+vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha){
+    vector<vector<double> > sol ;
     for (int i = 0; i < alpha; ++i)
     {
-        std::vector<double> autov = pIteration(mat, 2048);
+        std::vector<double> autov = pIteration(mat, 10000);
         double norma = norm(autov);
-        normalizar(autov);
-        for(int o = 0; o < mat.size(); o++){
-        	cout << " " << autov[o];
-        }
-        sol[i] = autov;
-        transp = xxt(autov);
-        multConst(transp, norma);
         cout << norma << endl;
+        vector<vector<double> > transp = xxt(autov);
+        normalizar(autov);
+        sol.push_back(autov);
+        divConst(transp, norma);
         matSub(mat, transp);
     }
     return sol;

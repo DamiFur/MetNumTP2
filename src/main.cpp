@@ -33,7 +33,7 @@ vector<vector<double> > PCA_M_K(vector<vector<double> > X_K);
 void print(vector<vector<int> >& M , ostream& out, const string caption, const char sep);
 void print(vector<vector<double> >& M, ostream& out, const string caption, const char sep);
 void print(int ** M, int m, int n, ostream& out, const string caption, const char sep);
-vector<vector<double>> filtrarPartition(const vector<vector<double>>& x, const vector<vector<bool>>& partition, int k);
+vector<vector<double>> filtrarPartition(const vector<vector<double>>& x, const vector<vector<bool>>& partition, int k, bool b);
 int knn(const vector<vector<double>>& train, const vector<double>& adivinar, int k);
 
 int main(int argc, char * argv[]){
@@ -125,18 +125,19 @@ int main(int argc, char * argv[]){
 	trainMatrix(train, ans, K);
 
 	if (metodo == 0) {
-		vector<vector<double>> x = filtrarPartition(ans, partitions, K);
 		double acertados = 0, total = 0;
-		for(int i = 0; i<partitions.size(); ++i) {
-			if (!partitions[K][i]) {
-				int guess = knn(ans, x[i], K_DE_KNN);
+		for(int i = 0; i<partitions.size(); ++i) { // i itera particiones 
+			vector<vector<double>> x = filtrarPartition(ans, partitions, i, true);
+			vector<vector<double>> v = filtrarPartition(ans, partitions, i, false);
+			for (int j = 0; j < v.size(); j++){ // j itera sobre los test de train (v)
+				int guess = knn(x, v[j], kappa);
 				total++;
-				if (guess == x[i][0]) {
+				if (guess == v[i][0]) {
 					acertados++;
 				}
 			}
 		}
-		reconocimiento << acertados / total << endl;
+		reconocimiento << (double) acertados / total << endl;
 	}else if (metodo == 3){
 		vector<vector<double>> x = toX(ans, K);
 		//const char sep = ';';
@@ -186,12 +187,12 @@ int main(int argc, char * argv[]){
 
 }
 
-vector<vector<double>> filtrarPartition(const vector<vector<double>>& x, const vector<vector<bool>>& partition, int k) {
+vector<vector<double>> filtrarPartition(const vector<vector<double>>& x, const vector<vector<bool>>& partition, int k, bool b) {
 	// Filtra por partition y ademas convierte a double
 	vector<vector<double>> ret;
 
 	for (int i = 0; i < x.size(); ++i) {
-		if (partition[k][i]) {
+		if (partition[k][i] == b) {
 			ret.push_back(x[i]);
 		}
 	}
@@ -360,16 +361,27 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
 #define cuad(x) ((x)*(x))
 double distancia(const vector<double>& v1, const vector<double>& v2) {
 	// en v1[0] esta el label asi que hay que comparar v1[i+1] con v2[i]
-	double ret = 0.0;
-	for (int i = 0; i<v1.size(); ++i) {
-		ret += cuad(v1[i+1]-v2[i]);
-	}
-	return sqrt(ret);
+        double ret = 0.0;
+        // Compara los tamaños - 
+        //      si v2 es mas chico ("uno" mas chico) que v1 (cuando v2 pertenece a test y v1 a train
+	assert( (v2.size() == v1.size() ) || (v2.size() == (v1.size() - 1) ) );
+        if (v2.size() == (v1.size() -1)){
+                for (int i = 0; i < v2.size(); ++i) {
+                        ret += cuad(v1[i+1]-v2[i]);
+                }
+        } else {
+        // Sino compara desde el indice 1 - v1 y v2 pertenecen a train
+                for (int i = 1; i < v2.size(); ++i){
+                        ret += cuad(v1[i] - v2[i]);
+                }
+        }
+        return sqrt(ret);
+
 }
 
 int knn(const vector<vector<double>>& train, const vector<double>& adivinar, int k) {
 
-	set<pair<double, int>> dist_index;
+	multiset<pair<double, int>> dist_index;
 
 	for (int i = 0; i<train.size(); ++i) {
 		dist_index.insert(make_pair(distancia(train[i], adivinar), train[i][0]));

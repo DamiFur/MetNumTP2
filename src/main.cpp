@@ -427,6 +427,12 @@ double norm(vector<double> &b){
 		sol += b[i]*b[i];
 	return sqrt(sol);
 }
+double productoInterno(vector<double> &b){
+	double sol = 0;
+	for (int i = 0; i < b.size(); ++i)
+		sol += b[i]*b[i];
+	return sol;
+}
 
 void normalizar(vector<double> &b){
 	double norma = norm(b);
@@ -434,26 +440,44 @@ void normalizar(vector<double> &b){
 		b[i] /= norma;
 }
 
-vector<double> pIteration(vector<vector<double> > &a, int n){
-	vector<double> b;
-	b.reserve(a.size());
-	srand (time(NULL));
-	for (int i = 0; i < a.size(); ++i)
-		b.push_back((double)(rand() % 1009));
-	while(n>0){
-		normalizar(b);
-		b = mult(a, b);
-		n--;
-	}
-	return b;
+double prod(std::vector<double> v1, std::vector<double> v2){
+    double sol =0;
+    for (int i = 0; i < v1.size(); ++i)
+    {
+        sol+=(v1[i]*v2[i]);
+    }
+    return sol;
+}
+
+vector<double> pIteration(vector<vector<double> > &a, int n, double &e){
+    vector<double> b;
+    b.reserve(a.size());
+    srand (time(NULL));
+    for (int i = 0; i < a.size(); ++i)
+        b.push_back((double)(rand() % 1009));
+    while(n>0){
+        vector<double> c = mult(a, b);
+        normalizar(c);
+        b = c;
+        n--;
+    }
+    for (int i = 0; i < b.size(); ++i)
+    {
+        if(b[i]<0.000001 and b[i]>(-0.000001))
+            b[i]=0;
+    }
+    e = prod(b, mult(a,b));
+    e /= productoInterno(b);
+    return b;
 }
 
 vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama) {
 	vector<vector<double>> w(x.size());
+	double eigenvalue; 
 	for (int i = 0; i<gama; ++i) {
 		vector<vector<double>> m_i = multiply(multiply(multiply(trasponer(x),y),trasponer(y)),x);
 		//vector<vector<double>> m_i = multiply(x, multiply(trasponer(y), multiply(y, trasponer(x))));
-		w[i] = pIteration(m_i, 100);
+		w[i] = pIteration(m_i, 100, eigenvalue);
 		normalizar(w[i]);
 		vector<double> t_i = mult(x, w[i]);
 		normalizar(t_i);

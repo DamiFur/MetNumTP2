@@ -132,7 +132,8 @@ int main(int argc, char * argv[]){
 			for (int j = 0; j < v.size(); j++){ // j itera sobre los test de train (v)
 				int guess = knn(x, v[j], kappa);
 				total++;
-				if (guess == v[i][0]) {
+				cout << guess << " " << v[j][0] << endl;
+				if (guess == v[j][0]) {
 					acertados++;
 				}
 			}

@@ -415,6 +415,7 @@ vector<vector<double>> toX(vector<vector<int>>& ans, int K){
 			x[i][j] = (ans[i][j+1] - average[j]);
 		}
 	}
+	cout << "SALGO DEL toX" << endl;
 	return x;
 }
 
@@ -440,6 +441,7 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
 }
 
 vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<int>> images){
+	cout << "LLEGUE A characteristic_transformation" << endl;
 	int n = images.size();
 	int alpha = eigenvectors.size();
 
@@ -451,6 +453,7 @@ vector<vector<double>> characteristic_transformation(vector<vector<double>> eige
 				ans[i][j] += images[i][a] * eigenvectors[j][a];
 			}
 		}
+		cout << "VUELTA " << n << " de characteristic_transformation" << endl;
 	}
 
 	return ans;
@@ -570,6 +573,7 @@ vector<double> pIteration(vector<vector<double> > &a, int n, double &e){
         normalizar(c);
         b = c;
         n--;
+        cout << "VUELTA DEL PITERATION " << n << endl;
     }
     for (int i = 0; i < b.size(); ++i)
     {
@@ -593,17 +597,20 @@ vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha){
 	double eigenvalue;
 	for (int i = 0; i < alpha; ++i)
 	{
-		std::vector<double> autov = pIteration(mat, 10000, eigenvalue);
+		cout << "VUELTA DEFLATE NRO " << i << endl;
+		std::vector<double> autov = pIteration(mat, 25, eigenvalue);
+		cout << "TERMINE pITERATION " << i << endl;
 		vector<vector<double> > transp = xxt(autov);
 		sol.push_back(autov);
 		multConst(transp, eigenvalue);
 		matSub(mat, transp);
 	}
+	cout << "TERMINE EL DEFLATE" << endl;
 	return sol;
 }
 
 vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama) {
-
+	cout << "Entro al multiply" << endl;
 	vector<vector<double>> w(x.size());
 	double eigenvalue; 
 	for (int i = 0; i<gama; ++i) {
@@ -621,6 +628,7 @@ vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, i
 		vector<vector<double>> yt = multiply(y, ttt);
 		matSub(y, yt);
 	}
+	cout << "salgo del multiply" << endl;
 	return w;
 
 }

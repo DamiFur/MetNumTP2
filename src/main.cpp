@@ -93,8 +93,8 @@ int main(int argc, char * argv[]){
 
 	// Referencia a los archivos
 	 input >> train;
-	 test = train + "/test.csv";
-	 train += "/train.csv";
+	 test = train + "test.csv";
+	 train += "train.csv";
 	 
 	// Variables de tuneo
 	 input >> kappa;
@@ -122,23 +122,30 @@ int main(int argc, char * argv[]){
 	// char * quizas sea mejor
 	vector<vector<double>> ans(K, vector<double>(image_size + 1));
 
+	cout << "Levantando train" << endl;
 	trainMatrix(train, ans, K);
+	cout << "Train cargado" << endl;
 
 	if (metodo == 0) {
 		double acertados = 0, total = 0;
 		for(int i = 0; i<partitions.size(); ++i) { // i itera particiones 
+			cout << "Comienza particion " << i << endl;
+			double p_acertados = 0, p_total = 0;
 			vector<vector<double>> x = filtrarPartition(ans, partitions, i, true);
 			vector<vector<double>> v = filtrarPartition(ans, partitions, i, false);
-			for (int j = 0; j < v.size(); j++){ // j itera sobre los test de train (v)
+			for (int j = 0; j < v.size(); j++) { // j itera sobre los test de train (v)
 				int guess = knn(x, v[j], kappa);
-				total++;
-				cout << guess << " " << v[j][0] << endl;
+				p_total++;
 				if (guess == v[j][0]) {
-					acertados++;
+					p_acertados++;
 				}
 			}
+			reconocimiento << "Particion " << i << ": ";
+			reconocimiento << p_acertados / p_total << endl;
+			acertados += p_acertados;
+			total += p_total;
 		}
-		reconocimiento << (double) acertados / total << endl;
+		reconocimiento << acertados / total << endl;
 	}else if (metodo == 3){
 		vector<vector<double>> x = toX(ans, K);
 		//const char sep = ';';
@@ -381,7 +388,6 @@ double distancia(const vector<double>& v1, const vector<double>& v2) {
 }
 
 int knn(const vector<vector<double>>& train, const vector<double>& adivinar, int k) {
-
 	multiset<pair<double, int>> dist_index;
 
 	for (int i = 0; i<train.size(); ++i) {
@@ -394,6 +400,7 @@ int knn(const vector<vector<double>>& train, const vector<double>& adivinar, int
 	}
 
 	int votos[10];
+	for (int i = 0; i<10; ++i) votos[i] = 0;
 	for (const auto& v : dist_index) {
 		votos[v.second]++;
 	}
@@ -404,7 +411,6 @@ int knn(const vector<vector<double>>& train, const vector<double>& adivinar, int
 			ganador = i;
 		}
 	}
-
 	return ganador;
 }
 

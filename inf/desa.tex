@@ -1,3 +1,25 @@
 \section{Desarrollo}
 
+\subsection{M\'etodos para la experimentaci\'on}
 
+Hablar sobre los metodos elegidos para la implementaci\'on
+
+\subsection{Implementaci\'on}
+
+Estaremos desarrollando la implementaci\'on de nuestro c\'odigo y las distintas aclaraciones que sean pertinentes.
+
+\subsubsection{Inicializaci\'on}
+
+En el main de nuestro programa, leemos la entrada seg\'un lo especificado por el enunciado y el formato de archivos del TP. La funci\'on trainMatrix se encarga de levantar en memoria y llenar una matriz de doubles con la informaci\'on de train en donde cada fila representa una imagen y las columnas sus distintos pixeles. \\
+Nos sera de utilidad una funci\'on llamada filtrarPartition para poder filtrar nuestra partici\'on, algo que utilizaremos a lo largo de nuestro programa para poder analizar nuestro algoritmo en base a la informaci\'on de training.
+
+\subsubsection{kNN}
+
+Dada la matriz train, un cierto vector que queremos saber que d\'igito representa y un k, haremos kNN. Para poder obtener los k de menor distintancia a nuestro vector de una manera eficiente, utilizaremos un set en donde iremos metiendo cada distancia y cuando el set supere el tama\~no k, eliminaremos su \'ultimo elemento. Recordemos que el set ordena sus elementos de menor a mayor y el "\'ultimo elemento" representa el mas grande, lo que nos asegura que de esta manera vamos a obtener los k de menor distancia. En caso de haber dos puntos a distancias iguales, va a desempatar por el menor d\'igito por como esta implementado. Decidimos esta manera de desempatar porque es determin\'istica y simple.\\
+Los k puntos mas cercanos luego "votaran" seg\'un el d\'igito que representan y nos quedaremos con el mas votado (En caso de empate, con el menor d\'igito mas votado). Esta ser\'a nuestra soluci\'on usando este metodo.
+
+\subsubsection{PCA}
+
+\subsubsection{PLS-DA}
+
+\subsubsection{M\'etodos de experimentaci\'on}

@@ -1,0 +1,143 @@
+\documentclass[a4paper]{article}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{enumerate}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{indentfirst}
+\usepackage{fancyhdr}
+\usepackage{latexsym}
+\usepackage{blkarray}
+\usepackage{multirow}
+\usepackage[colorlinks=true, linkcolor=black]{hyperref}
+%\usepackage{makeidx}
+%\usepackage{float}
+\usepackage{calc}
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{amsfonts}
+%\lstset{language=C}
+\definecolor{gray}{gray}{0.5}
+\definecolor{light-gray}{gray}{0.95}
+\definecolor{orange}{rgb}{1,0.5,0}
+
+\input{page.layout}
+% \setcounter{secnumdepth}{2}
+\usepackage{underscore}
+\usepackage{caratula}
+\usepackage{url}
+\usepackage{float}
+
+\newcommand{\cod}[1]{{\tt #1}}
+\newcommand{\negro}[1]{{\bf #1}}
+\newcommand{\ital}[1]{{\em #1}}
+\newcommand{\may}[1]{{\sc #1}}
+\newcommand{\tab}{\hspace*{2em}}
+
+\hypersetup{
+ pdfstartview= {FitH \hypercalcbp{\paperheight-\topmargin-1in-\headheight}},
+ pdfauthor={Grupo},
+ pdfsubject={Dise\~{n}o}
+}
+
+\lstdefinestyle{customc}{
+  backgroundcolor=\color{light-gray},
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  numbers=left,
+  xleftmargin=\parindent,
+  language=C,
+  showstringspaces=false,
+  basicstyle=\footnotesize\ttfamily,
+  keywordstyle=\bfseries\color{blue},
+  commentstyle=\itshape\color{gray},
+  identifierstyle=\color{black},
+  stringstyle=\color{orange},
+}
+
+\lstdefinestyle{customasm}{
+  backgroundcolor=\color{light-gray},
+  belowcaptionskip=1\baselineskip,
+  numbers=left,
+  xleftmargin=\parindent,
+  language=[x86masm]Assembler,
+  keywordstyle=\bfseries\color{blue},
+  basicstyle=\footnotesize\ttfamily,
+  commentstyle=\itshape\color{gray},
+}
+
+\lstset{escapechar=@}
+
+
+\begin{document}
+
+\thispagestyle{empty}
+\materia{Métodos Númericos}
+\submateria{Primer Cuatrimestre de 2016}
+\titulo{Trabajo Práctico II}
+\subtitulo{CSI:DC}
+\integrante{Nicolas Di Carli}{164/13}{nikodecarli@gmail.com}
+\integrante{Damián Furman}{936/11}{damian.a.furman@gmail.com}
+\integrante{Jorge Quintana}{344/11}{jorge.quintana.81@gmail.com}
+\integrante{Lucas Tavolaro Ortiz}{322/12}{tavo92@gmail.com}
+
+\makeatletter
+
+\maketitle
+\newpage
+
+\thispagestyle{empty}
+\vfill
+
+\thispagestyle{empty}
+\vspace{3cm}
+\tableofcontents
+\newpage
+
+\newenvironment{myindentpar}[1]
+{\begin{list}{1}
+         {\setlength{\leftmargin}{#1}}
+         \item[]
+}
+{\end{list} }
+
+%\normalsize
+\newpage
+
+% -------------------------------------------------------
+% Introducción Teórica
+% -------------------------------------------------------
+\input{intro.tex}
+
+% -------------------------------------------------------
+% Desarrollo
+% -------------------------------------------------------
+\newpage
+\input{desa.tex}
+
+% -------------------------------------------------------
+% resultados
+% -------------------------------------------------------
+\newpage
+\input{res.tex}
+
+% -------------------------------------------------------
+% Discusión
+% -------------------------------------------------------
+\newpage
+\input{disc.tex}
+
+% -------------------------------------------------------
+% Conclusiones
+% -------------------------------------------------------
+\newpage
+\input{conc.tex}
+
+% -------------------------------------------------------
+% Referencias
+% -------------------------------------------------------
+\newpage
+\input{ref.tex}
+
+
+\end{document}

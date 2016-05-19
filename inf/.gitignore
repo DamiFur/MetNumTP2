@@ -1,0 +1,7 @@
+# Archivos que se generar al compilar el tex
+informe.aux
+informe.log
+informe.out
+informe.pdf
+informe.synctex.gz
+informe.toc

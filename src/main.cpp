@@ -23,13 +23,17 @@ int db_size = DB_SIZE;
 const int K_DE_KNN = 10;
 
 void trainMatrix(string train, vector<vector<double>>& ans, int K);
+vector<vector<double>> toImageVector(vector<vector<double>> matrix, int K);
+vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha);
 vector<vector<double>> toX(vector<vector<double>>& ans, int K);
+vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<double>> images);
 //vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m);
 vector<vector<double>> trasponer(vector<vector<double>> matrix);
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y);
 //vector<vector<double> > toX_K(const int ** const ans, const int K, const bool ** const partition);
 vector<vector<double> > toX_K(vector<vector<double>>& ans, const int K, vector<vector<bool>>& partition);
 vector<vector<double> > PCA_M_K(vector<vector<double> > X_K);
+vector<double> pIteration(vector<vector<double> > &a, int n);
 void print(vector<vector<int> >& M , ostream& out, const string caption, const char sep);
 void print(vector<vector<double> >& M, ostream& out, const string caption, const char sep);
 void print(int ** M, int m, int n, ostream& out, const string caption, const char sep);
@@ -165,9 +169,38 @@ int main(int argc, char * argv[]){
 			
 		}
 		return 0;
-	} else {
-		cout << "Aun no implementado" << endl;
-		return 1;
+	} else if (metodo == 1){
+
+		int K = 42000;
+
+	// 	//trasformamos train en una matriz donde cada fila tiene el label del digito en la primer columna y 784 columnas más con los pixels
+		// char * quizas sea mejor
+		vector<vector<double>> ans(K, vector<double>(image_size + 1));
+
+		trainMatrix(train, ans, K);
+
+		vector<vector<double>> images = toImageVector(ans, K);
+
+		vector<vector<double>> x = toX(ans, K);
+
+		vector<vector<double>> xt = trasponer(x);
+
+		vector<vector<double>> xtx = multiply(x, xt);
+
+		vector<vector<double>> eigenvectors = deflate(xtx, alpha);
+
+		vector<vector<double>> tcpca = characteristic_transformation(eigenvectors, ans);
+
+		//print(tcpca, cout, "Transformacion Caracteristica PCA", ';');
+
+		// for(int y = 0; y < K; y++){
+		// 	for(int z = 0; z < 784; z++){
+		// 		cout << x[y][z] << " ";
+		// 	}
+		// 	cout << endl << endl;
+		// }
+
+		return 0;
 	}
 
 /*
@@ -177,15 +210,12 @@ int main(int argc, char * argv[]){
 	vector<vector<double>> xtx = multiply(xt, x);
 */
 
-	// for(int y = 0; y < K; y++){
-	// 	for(int z = 0; z < 784; z++){
-	// 		cout << x[y][z] << " ";
-	// 	}
-	// 	cout << endl << endl;
-	// }
 
 
-}
+
+
+
+ }
 
 vector<vector<double>> filtrarPartition(const vector<vector<double>>& x, const vector<vector<bool>>& partition, int k, bool b) {
 	// Filtra por partition y ademas convierte a double
@@ -218,6 +248,19 @@ void trainMatrix(string train, vector<vector<double>>& ans, int K){
 			ss >> ans[i][j];
 		}
 	}
+
+}
+
+vector<vector<double>> toImageVector(vector<vector<double>> matrix, int K){
+	vector<vector<double>> ans (K, vector<double> (784));
+
+	for(int i = 0; i < K; i++){
+		for(int j = 0; j < 784; j++){
+			ans[i][j] = matrix[i][j + 1];
+		}
+	}
+
+	return ans;
 
 }
 
@@ -358,6 +401,24 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
 
 }
 
+vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<double>> images){
+	int n = images.size();
+	int alpha = eigenvectors.size();
+
+	vector<vector<double>> ans (n, vector<double> (alpha, 0));
+
+	for(int i = 0; i < n; i++){
+		for(int j = 0; j < alpha; j++){
+			for(int a = 0; a < 784; a++){
+				ans[i][j] += images[i][a] * eigenvectors[j][a];
+			}
+		}
+	}
+
+	return ans;
+
+}
+
 #define cuad(x) ((x)*(x))
 double distancia(const vector<double>& v1, const vector<double>& v2) {
 	// en v1[0] esta el label asi que hay que comparar v1[i+1] con v2[i]
@@ -421,7 +482,7 @@ vector<vector<double> > xxt(vector<double> &v){
 	vector<vector<double> > sol (v.size(), vector<double> (v));
 	for (int i = 0; i < v.size(); ++i){
 		for (int j = 0; j < v.size(); ++j)
-			sol[i][j]+=v[i];
+			sol[i][j]*=v[i];
 	}
 	return sol;
 }
@@ -483,7 +544,50 @@ vector<double> pIteration(vector<vector<double> > &a, int n, double &e){
     return b;
 }
 
+
+vector<double> pIteration(vector<vector<double> > &a, int n){
+	vector<double> b;
+	b.reserve(a.size());
+	srand (time(NULL));
+	for (int i = 0; i < a.size(); ++i)
+		b.push_back((double)(rand() % 1009));
+	while(n>0){
+		normalizar(b);
+		b = mult(a, b);
+		n--;
+	}
+	return b;
+}
+
+vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha){
+    vector<vector<double> > sol ;
+    for (int i = 0; i < alpha; ++i)
+    {
+        std::vector<double> autov = pIteration(mat, 10000);
+        double norma = norm(autov);
+        cout << norma << endl;
+        vector<vector<double> > transp = xxt(autov);
+        normalizar(autov);
+        sol.push_back(autov);
+        // divConst(transp, norma);
+        matSub(mat, transp);
+    }
+    return sol;
+
+}
+
+
+
+void multConst(vector<vector<double> > &a, double n){
+    for (int i = 0; i < a.size(); ++i){
+        for (int j = 0; j < a.size(); ++j)
+            a[i][j]*=n;
+    }
+}
+ 
+ 
 vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama) {
+
 	vector<vector<double>> w(x.size());
 	double eigenvalue; 
 	for (int i = 0; i<gama; ++i) {
@@ -502,6 +606,7 @@ vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, i
 		matSub(y, yt);
 	}
 	return w;
+
 }
 
 void print(vector<vector<int> >& M  , ostream& out, const string caption = "<Empty caption>", const char sep = ' '){
@@ -542,4 +647,3 @@ void print(int ** M, int m, int n, ostream& out, const string caption = "<Empty 
 	}
 	out << endl;
 }
-

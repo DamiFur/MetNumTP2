@@ -1,8 +1,15 @@
 Para probar con el test minimal - metodo 3 (prueba de las funciones)
 
 Ejecutar parado en src con los siguientes parametros
+
 testmin/test1.in (input file)
 testmin/test1_met3.out (output file)
 3 (metodo de testeo basico)
 15 (tamaño de la base de train en ../datamin)
 10 (cantidad de pixeles por imagen)
+
+test_1000x128x50/test_1000x128x50.in (input file)
+test_1000x128x50/test_1000x128x50.out (output file)
+<metodo de testeo>
+1000 (tamaño base de train en ../data_1000x128x50/)
+128 (cantidad de pixeles por imagen)

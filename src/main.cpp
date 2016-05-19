@@ -22,19 +22,25 @@ int image_size = IMAGE_SIZE;
 int db_size = DB_SIZE;
 const int K_DE_KNN = 10;
 
-void trainMatrix(string train, vector<vector<double>>& ans, int K);
-vector<vector<double>> toX(vector<vector<double>>& ans, int K);
+void trainMatrix(string train, vector<vector<int>>& ans, int K);
+vector<vector<double>> toX(vector<vector<int>>& ans, int K);
 //vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m);
 vector<vector<double>> trasponer(vector<vector<double>> matrix);
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y);
 //vector<vector<double> > toX_K(const int ** const ans, const int K, const bool ** const partition);
-vector<vector<double> > toX_K(vector<vector<double>>& ans, const int K, vector<vector<bool>>& partition);
+vector<vector<double> > toX_K(vector<vector<int>>& ans, const int K, vector<vector<bool>>& partition);
 vector<vector<double> > PCA_M_K(vector<vector<double> > X_K);
 void print(vector<vector<int> >& M , ostream& out, const string caption, const char sep);
 void print(vector<vector<double> >& M, ostream& out, const string caption, const char sep);
 void print(int ** M, int m, int n, ostream& out, const string caption, const char sep);
-vector<vector<double>> filtrarPartition(const vector<vector<double>>& x, const vector<vector<bool>>& partition, int k, bool b);
-int knn(const vector<vector<double>>& train, const vector<double>& adivinar, int k);
+vector<vector<int>> filtrarPartition(const vector<vector<int>>& x, const vector<vector<bool>>& partition, int k, bool b);
+int knn(const vector<vector<int>>& train, const vector<int>& adivinar, int k);
+double precision(int t_pos[], int f_pos[], int size);
+double precision_(int t_pos[], int f_pos[], double prec[], int size);
+double recall(int t_pos[], int f_neg[], int size);
+double recall_(int t_pos[], int f_neg[], double rec[], int size);
+double f1_score(double prec, double rec);
+double f1_score_(double prec[], double rec[], double f1[], int size);
 
 int main(int argc, char * argv[]){
 
@@ -91,6 +97,7 @@ int main(int argc, char * argv[]){
 	 int gamma;
 	 int crossK;
 
+
 	// Referencia a los archivos
 	 input >> train;
 	 test = train + "test.csv";
@@ -120,7 +127,8 @@ int main(int argc, char * argv[]){
 	int K = db_size;
 	//trasformamos train en una matriz donde cada fila tiene el label del digito en la primer columna y 784 columnas más con los pixels
 	// char * quizas sea mejor
-	vector<vector<double>> ans(K, vector<double>(image_size + 1));
+	//vector<vector<double>> ans(K, vector<double>(image_size + 1));
+	vector<vector<int>> ans(K, vector<int>(image_size + 1));
 
 	cout << "Levantando train" << endl;
 	trainMatrix(train, ans, K);
@@ -131,19 +139,39 @@ int main(int argc, char * argv[]){
 		for(int i = 0; i<partitions.size(); ++i) { // i itera particiones 
 			cout << "Comienza particion " << i << endl;
 			double p_acertados = 0, p_total = 0;
-			vector<vector<double>> x = filtrarPartition(ans, partitions, i, true);
-			vector<vector<double>> v = filtrarPartition(ans, partitions, i, false);
+			// Para los experimentos - verdaderos/falsos positivos/negativos
+			int t_pos[10] = {0}, f_pos[10] = {0}, f_neg[10] = {0};
+			vector<vector<int>> x = filtrarPartition(ans, partitions, i, true);
+			vector<vector<int>> v = filtrarPartition(ans, partitions, i, false);
 			for (int j = 0; j < v.size(); j++) { // j itera sobre los test de train (v)
 				int guess = knn(x, v[j], kappa);
 				p_total++;
 				if (guess == v[j][0]) {
 					p_acertados++;
+					t_pos[v[j][0]]++;
+				} else {
+					f_pos[guess]++;
+					f_neg[v[j][0]]++;
 				}
 			}
+			
+			
 			reconocimiento << "Particion " << i << ": ";
 			reconocimiento << p_acertados / p_total << endl;
 			acertados += p_acertados;
 			total += p_total;
+
+			double prec[10] = {0}, prec_res;
+			double rec[10] = {0}, rec_res;
+			double f1[10] = {0}, f1_res;
+
+			prec_res = precision_(t_pos, f_pos, prec, 10);
+			rec_res = recall_(t_pos, f_neg, rec, 10);
+			f1_res = f1_score_(prec, rec, f1, 10);
+
+			output << "Particion" << i << ":" << " ";
+			output << prec_res << ' ' << rec_res << ' ' << f1_res << endl;
+	
 		}
 		reconocimiento << acertados / total << endl;
 	}else if (metodo == 3){
@@ -195,9 +223,9 @@ int main(int argc, char * argv[]){
 
 }
 
-vector<vector<double>> filtrarPartition(const vector<vector<double>>& x, const vector<vector<bool>>& partition, int k, bool b) {
+vector<vector<int>> filtrarPartition(const vector<vector<int>>& x, const vector<vector<bool>>& partition, int k, bool b) {
 	// Filtra por partition y ademas convierte a double
-	vector<vector<double>> ret;
+	vector<vector<int>> ret;
 
 	for (int i = 0; i < x.size(); ++i) {
 		if (partition[k][i] == b) {
@@ -207,7 +235,7 @@ vector<vector<double>> filtrarPartition(const vector<vector<double>>& x, const v
 	return ret;
 }
 
-void trainMatrix(string train, vector<vector<double>>& ans, int K){
+void trainMatrix(string train, vector<vector<int>>& ans, int K){
 
 	ifstream input;
 	input.open(train);
@@ -245,7 +273,7 @@ vector<vector<double>> trasponer(vector<vector<double>> matrix){
 	return ans;
 }
 
-vector<vector<double> > toX_K(vector<vector<double>>& ans, int K, vector<vector<bool>>& partition){
+vector<vector<double> > toX_K(vector<vector<int>>& ans, int K, vector<vector<bool>>& partition){
 	// K es la linea de partition a tener en cuenta
 	// partition, la matriz de bool
 	//int image_size = 784;
@@ -305,7 +333,7 @@ vector<vector<double> > PCA_M_K(vector<vector<double> > X_K){
 	}
 	return M;
 }
-vector<vector<double>> toX(vector<vector<double>>& ans, int K){
+vector<vector<double>> toX(vector<vector<int>>& ans, int K){
 
 	double average[image_size];
 
@@ -367,7 +395,7 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
 }
 
 #define cuad(x) ((x)*(x))
-double distancia(const vector<double>& v1, const vector<double>& v2) {
+double distancia(const vector<int>& v1, const vector<int>& v2) {
 	// en v1[0] esta el label asi que hay que comparar v1[i+1] con v2[i]
         double ret = 0.0;
         // Compara los tamaños - 
@@ -375,19 +403,19 @@ double distancia(const vector<double>& v1, const vector<double>& v2) {
 	assert( (v2.size() == v1.size() ) || (v2.size() == (v1.size() - 1) ) );
         if (v2.size() == (v1.size() -1)){
                 for (int i = 0; i < v2.size(); ++i) {
-                        ret += cuad(v1[i+1]-v2[i]);
+                        ret += cuad((double)(v1[i+1])- (double)(v2[i]));
                 }
         } else {
         // Sino compara desde el indice 1 - v1 y v2 pertenecen a train
                 for (int i = 1; i < v2.size(); ++i){
-                        ret += cuad(v1[i] - v2[i]);
+                        ret += cuad((double)(v1[i]) - (double)(v2[i]));
                 }
         }
         return sqrt(ret);
 
 }
 
-int knn(const vector<vector<double>>& train, const vector<double>& adivinar, int k) {
+int knn(const vector<vector<int>>& train, const vector<int>& adivinar, int k) {
 	multiset<pair<double, int>> dist_index;
 
 	for (int i = 0; i<train.size(); ++i) {
@@ -533,17 +561,16 @@ vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, i
 }
 
 void print(vector<vector<int> >& M  , ostream& out, const string caption = "<Empty caption>", const char sep = ' '){
-	int m = (M[0]).size();
-	int n = M.size();
+	int m = M.size();
+	int n = (M[0]).size();
 
 	out << caption << endl;
 	for (int i = 0; i < m; i++){
-		for (int j=0; j < n; j++){
+		for (int j=0; j < n -1; j++){
 			out << M[i][j] << sep;
 		}
-		out << endl;
+		out << M[i][n-1] << endl;
 	}
-	out << endl;
 	out << endl;
 }
 void print(vector<vector<double> >& M , ostream& out, const string caption = "<Empty caption>", const char sep = ' '){
@@ -571,3 +598,75 @@ void print(int ** M, int m, int n, ostream& out, const string caption = "<Empty 
 	out << endl;
 }
 
+double precision_(int t_pos[], int f_pos[], double prec[], int size){
+	
+	double ret = 0;
+	for (int i = 0; i < size; i++){
+		// Para evitar los nan si da 0/0
+		if (t_pos[i] == 0){
+			prec[i] = 0;
+		} else {
+			// asegurado denominador != 0
+			prec[i] = (double) (t_pos[i]) / ((double)(t_pos[i]) + (double)(f_pos[i]));
+		}
+		ret += prec[i];
+	}
+	ret /= (double) size;
+	return ret;
+}
+double precision(int t_pos[], int f_pos[], int size){
+	double ret = 0;
+	for (int i = 0; i < size; i++){
+		if (t_pos[i] != 0){
+			ret += (double) (t_pos[i]) / ((double)(t_pos[i]) + (double)(f_pos[i]));
+		}
+	}
+	ret /= (double) size;
+	return ret;
+}
+
+double recall(int t_pos[], int f_neg[], int size){
+	double ret = 0;
+	for (int i = 0; i < size; i++){
+		if (t_pos[i] != 0){
+			ret += (double) (t_pos[i]) / ((double)(t_pos[i]) + (double)(f_neg[i]));
+		}
+	}
+	ret /= (double) size;
+	return ret;
+}
+double recall_(int t_pos[], int f_neg[], double rec[], int size){
+	double ret = 0;
+	for (int i = 0; i < size; i++){
+		if (t_pos[i] == 0){
+			rec[i] = 0;
+		} else {
+			rec[i] = (double) (t_pos[i]) / ((double)(t_pos[i]) + (double)(f_neg[i]));
+		}
+		ret += rec[i];
+	}
+	ret /= (double) size;
+	return ret;
+}
+double f1_score(double prec, double rec){
+	double ret = 0;
+	if ( prec == 0 || rec == 0){
+		ret = 0;
+	} else {
+		ret = ((2 * prec * rec)/(prec + rec));
+	}
+	return ret;
+}
+double f1_score_(double prec[], double rec[], double f1[], int size){
+	double ret = 0;
+	for (int i = 0; i < size; i++){
+		if ( prec[i] == 0 || rec[i] == 0 ){
+			f1[i] = 0;
+		} else {
+			f1[i] = ((2 * prec[i] * rec[i])/(prec[i] + rec[i]));
+			ret += f1[i];
+		}
+	}
+	ret /= size;
+	return ret;
+}

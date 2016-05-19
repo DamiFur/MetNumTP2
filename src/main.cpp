@@ -223,13 +223,13 @@ int main(int argc, char * argv[]){
 
 		vector<vector<double>> xt = trasponer(x);
 
-		vector<vector<double>> xtx = multiply(x, xt);
+		vector<vector<double>> xtx = multiply(xt, x);
 
 		vector<vector<double>> eigenvectors = deflate(xtx, alpha);
 
 		vector<vector<double>> tcpca = characteristic_transformation(eigenvectors, images);
 
-		//print(tcpca, cout, "Transformacion Caracteristica PCA", ';');
+		print(tcpca, cout, "Transformacion Caracteristica PCA", ';');
 
 		// for(int y = 0; y < K; y++){
 		// 	for(int z = 0; z < 784; z++){
@@ -453,7 +453,7 @@ vector<vector<double>> characteristic_transformation(vector<vector<double>> eige
 				ans[i][j] += images[i][a] * eigenvectors[j][a];
 			}
 		}
-		cout << "VUELTA " << n << " de characteristic_transformation" << endl;
+		cout << "VUELTA " << i << " de characteristic_transformation" << endl;
 	}
 
 	return ans;
@@ -563,6 +563,7 @@ double prod(std::vector<double> v1, std::vector<double> v2){
 }
 
 vector<double> pIteration(vector<vector<double> > &a, int n, double &e){
+	cout << "Tamaño de la matriz pIteration: " << a.size() << endl;
     vector<double> b;
     b.reserve(a.size());
     srand (time(NULL));
@@ -598,7 +599,7 @@ vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha){
 	for (int i = 0; i < alpha; ++i)
 	{
 		cout << "VUELTA DEFLATE NRO " << i << endl;
-		std::vector<double> autov = pIteration(mat, 25, eigenvalue);
+		std::vector<double> autov = pIteration(mat, 256, eigenvalue);
 		cout << "TERMINE pITERATION " << i << endl;
 		vector<vector<double> > transp = xxt(autov);
 		sol.push_back(autov);

@@ -440,18 +440,18 @@ void matSub(vector<vector<double> > &a, vector<vector<double> > &b){
 	}
 }
 
-double norm(vector<double> &b){
-	double sol = 0;
-	for (int i = 0; i < b.size(); ++i)
-		sol += b[i]*b[i];
-	return sqrt(sol);
-}
 double productoInterno(vector<double> &b){
 	double sol = 0;
 	for (int i = 0; i < b.size(); ++i)
 		sol += b[i]*b[i];
 	return sol;
 }
+
+inline double norm(vector<double> &b){
+	return sqrt(productoInterno(b));
+}
+
+
 
 void normalizar(vector<double> &b){
 	double norma = norm(b);
@@ -488,6 +488,27 @@ vector<double> pIteration(vector<vector<double> > &a, int n, double &e){
     e = prod(b, mult(a,b));
     e /= productoInterno(b);
     return b;
+}
+
+void multConst(vector<vector<double> > &a, double n){
+	for (int i = 0; i < a.size(); ++i){
+		for (int j = 0; j < a.size(); ++j)
+			a[i][j]*=n;
+	}
+}
+
+vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha){
+	vector<vector<double> > sol ;
+	double eigenvalue;
+	for (int i = 0; i < alpha; ++i)
+	{
+		std::vector<double> autov = pIteration(mat, 10000, eigenvalue);
+		vector<vector<double> > transp = xxt(autov);
+		sol.push_back(autov);
+		multConst(transp, eigenvalue);
+		matSub(mat, transp);
+	}
+	return sol;
 }
 
 vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama) {

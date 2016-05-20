@@ -290,12 +290,13 @@ void trainMatrix(string train, vector<vector<int>>& ans, int K){
 }
 
 vector<vector<int>> toImageVector(vector<vector<int>> matrix, int K){
-	vector<vector<int>> ans (K, vector<int> (784));
+	vector<vector<int>> ans (K, vector<int> (image_size));
 
 	for(int i = 0; i < K; i++){
-		for(int j = 0; j < 784; j++){
+		for(int j = 0; j < image_size-1; j++){
 			ans[i][j] = matrix[i][j + 1];
 		}
+		ans[i][image_size-1] = 0;
 	}
 
 	return ans;

@@ -131,6 +131,9 @@ int main(int argc, char * argv[]){
 	cin >> train;*/
 
 	int K = db_size;
+
+	ofstream ext;
+	ext.open("test1.exit.out");
 	//trasformamos train en una matriz donde cada fila tiene el label del digito en la primer columna y 784 columnas más con los pixels
 	// char * quizas sea mejor
 	//vector<vector<double>> ans(K, vector<double>(image_size + 1));
@@ -209,10 +212,11 @@ int main(int argc, char * argv[]){
 		return 0;
 	} else if (metodo == 1){
 
-		int K = 42000;
-
 	// 	//trasformamos train en una matriz donde cada fila tiene el label del digito en la primer columna y 784 columnas más con los pixels
 		// char * quizas sea mejor
+		ofstream expected;
+		expected.open("test_nuestro.expected");
+
 		vector<vector<int>> ans(K, vector<int>(image_size + 1));
 
 		trainMatrix(train, ans, K);
@@ -221,15 +225,25 @@ int main(int argc, char * argv[]){
 
 		vector<vector<double>> x = toX(ans, K);
 
+		cout << "Entro a trasponer" << endl;
+
 		vector<vector<double>> xt = trasponer(x);
 
+		cout << "Salgo de trasponer" << endl;
+
+		cout << "Entro a multiply" << endl;
+
 		vector<vector<double>> xtx = multiply(xt, x);
+
+		cout << "Salgo de multiply" << endl;
 
 		vector<vector<double>> eigenvectors = deflate(xtx, alpha);
 
 		vector<vector<double>> tcpca = characteristic_transformation(eigenvectors, images);
 
-		print(tcpca, cout, "Transformacion Caracteristica PCA", ';');
+		print(tcpca, ext, "Transformacion Caracteristica PCA", ';');
+
+		print(eigenvectors, expected, "", '\n');
 
 		// for(int y = 0; y < K; y++){
 		// 	for(int z = 0; z < 784; z++){
@@ -316,6 +330,7 @@ vector<vector<double>> trasponer(vector<vector<double>> matrix){
 		}
 	}
 
+
 	return ans;
 }
 
@@ -373,6 +388,7 @@ vector<vector<double> > PCA_M_K(vector<vector<double> > X_K){
 	// Dividir matriz por escalar
 	int n = X_K.size() - 1;
 	for (int j = 0; j < (M[0]).size(); j++){
+		cout << "Multiply fila " << j << endl;
 		for (int i = 0; i < M.size(); i++){
 			M[i][j] /= (double) n;
 		}
@@ -575,7 +591,6 @@ vector<double> pIteration(vector<vector<double> > &a, int n, double &e){
         normalizar(c);
         b = c;
         n--;
-        cout << "VUELTA DEL PITERATION " << n << endl;
     }
     for (int i = 0; i < b.size(); ++i)
     {
@@ -599,15 +614,12 @@ vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha){
 	double eigenvalue;
 	for (int i = 0; i < alpha; ++i)
 	{
-		cout << "VUELTA DEFLATE NRO " << i << endl;
 		std::vector<double> autov = pIteration(mat, 256, eigenvalue);
-		cout << "TERMINE pITERATION " << i << endl;
 		vector<vector<double> > transp = xxt(autov);
 		sol.push_back(autov);
 		multConst(transp, eigenvalue);
 		matSub(mat, transp);
 	}
-	cout << "TERMINE EL DEFLATE" << endl;
 	return sol;
 }
 
@@ -652,14 +664,14 @@ void print(vector<vector<double> >& M , ostream& out, const string caption = "<E
 	int m = M.size();
 	int n = (M[0]).size();
 
-	out << caption << endl;
+	// out << caption << endl;
 	for (int i = 0; i < m; i++){
 		for (int j=0; j < n -1; j++){
 			out << setprecision(5) << M[i][j] << sep;
 		}
 		out << setprecision(5) << M[i][n-1] << endl;
 	}
-	out << endl;
+	// out << endl;
 }
 
 void print(int ** M, int m, int n, ostream& out, const string caption = "<Empty caption>", const char sep = ' '){

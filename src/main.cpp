@@ -23,7 +23,7 @@ int db_size = DB_SIZE;
 const int K_DE_KNN = 10;
 
 
-vector<vector<int>> toImageVector(vector<vector<int>> matrix, int K);
+// vector<vector<int>> toImageVector(vector<vector<int>> matrix, int K);
 vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha, vector<double> &autovalores);
 vector<vector<double>> toX(vector<vector<double>>& ans, int K);
 vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<int>> images);
@@ -33,7 +33,7 @@ vector<vector<double>> toX(vector<vector<int>>& ans, int K);
 vector<vector<double>> trasponer(vector<vector<double>> matrix);
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y);
 //vector<vector<double> > toX_K(const int ** const ans, const int K, const bool ** const partition);
-vector<vector<double> > toX_K(vector<vector<int>>& ans, const int K, vector<vector<bool>>& partition);
+vector<vector<double> > toX_K(vector<vector<int>>& original, const int K, vector<vector<bool>>& partition, vector<vector<int>>& ans);
 vector<vector<double> > PCA_M_K(vector<vector<double> > X_K);
 vector<double> pIteration(vector<vector<double> > &a, int n);
 void print(vector<vector<int> >& M , ostream& out, const string caption, const char sep);
@@ -197,7 +197,8 @@ int main(int argc, char * argv[]){
 		print(x, output, "Matriz x", ' ');
 		//vector<vector<double> > M;
 		for (int i = 0; i < crossK; i++){
-			vector<vector<double> > M = toX_K(ans, i, partitions);
+			vector<vector<int>> parsed_images_K;
+			vector<vector<double> > M = toX_K(ans, i, partitions, parsed_images_K);
 			vector<vector<double> > N = trasponer(M);
 			vector<vector<double> > NM = multiply(N, M);
 			vector<vector<double> > P = PCA_M_K(M);
@@ -220,40 +221,42 @@ int main(int argc, char * argv[]){
 		ofstream expected;
 		expected.open("test_nuestro.expected");
 
-		vector<vector<int>> ans(K, vector<int>(image_size + 1));
+		// vector<vector<int>> images = toImageVector(ans, K, 1, partitions);
 
-		trainMatrix(train, ans, K);
+		// vector<vector<double>> x = toX(ans, K);
+		for (int i = 0; i < crossK; i++){
+			vector<vector<int>> parsed_images_K;
+			vector<vector<double>> x = toX_K(ans, i, partitions, parsed_images_K);
 
-		vector<vector<int>> images = toImageVector(ans, K);
+			// cout << "Entro a trasponer" << endl;
 
-		vector<vector<double>> x = toX(ans, K);
+			// vector<vector<double>> xt = trasponer(x);
 
-		cout << "Entro a trasponer" << endl;
+			// cout << "Salgo de trasponer" << endl;
 
-		vector<vector<double>> xt = trasponer(x);
+			// cout << "Entro a multiply" << endl;
 
-		cout << "Salgo de trasponer" << endl;
+			// vector<vector<double>> xtx = multiply(xt, x);
 
-		cout << "Entro a multiply" << endl;
+			// cout << "Salgo de multiply" << endl;
 
-		vector<vector<double>> xtx = multiply(xt, x);
+			vector<vector<double>> M = PCA_M_K(x);
 
-		cout << "Salgo de multiply" << endl;
+			vector<double> autovals;
 
-		vector<double> autovals;
+			autovals.reserve(alpha);
 
-		autovals.reserve(alpha);
+			vector<vector<double>> eigenvectors = deflate(M, alpha, autovals);
 
-		vector<vector<double>> eigenvectors = deflate(xtx, alpha, autovals);
+			vector<vector<double>> tcpca = characteristic_transformation(eigenvectors, parsed_images_K);
 
-		vector<vector<double>> tcpca = characteristic_transformation(eigenvectors, images);
+			print(tcpca, ext, "", ';');
 
-		print(tcpca, ext, "", ';');
+			print(eigenvectors, expected, "", '\n');
 
-		print(eigenvectors, expected, "", '\n');
+			print(autovals, output, "", '\n');
 
-		print(autovals, output, "", '\n');
-
+		}
 		// for(int y = 0; y < K; y++){
 		// 	for(int z = 0; z < 784; z++){
 		// 		cout << x[y][z] << " ";
@@ -264,11 +267,11 @@ int main(int argc, char * argv[]){
 		return 0;
 	} else if (metodo == 2){
 
-		vector<vector<int>> ans(K, vector<int>(image_size + 1));
+		// vector<vector<int>> ans(K, vector<int>(image_size + 1));
 
-		trainMatrix(train, ans, K);
+		// trainMatrix(train, ans, K);
 
-		vector<vector<int>> images = toImageVector(ans, K);
+		// vector<vector<int>> images = toImageVector(ans, K);
 
 		vector<vector<double>> x = toX(ans, K);
 
@@ -360,19 +363,19 @@ void trainMatrixDouble(string train, vector<vector<double>>& ans, int K){
 
 }
 
-vector<vector<int>> toImageVector(vector<vector<int>> matrix, int K){
-	vector<vector<int>> ans (K, vector<int> (image_size));
+// vector<vector<int>> toImageVector(vector<vector<int>> matrix, int cantImag, int k, vector<vector<bool>> partition){
+// 	vector<vector<int>> ans (cantImag, vector<int> (image_size));
 
-	for(int i = 0; i < K; i++){
-		for(int j = 0; j < image_size-1; j++){
-			ans[i][j] = matrix[i][j + 1];
-		}
-		ans[i][image_size-1] = 0;
-	}
+// 	for(int i = 0; i < cantImag; i++){
+// 		for(int j = 0; j < image_size-1; j++){
+// 			ans[i][j] = matrix[i][j + 1];
+// 		}
+// 		ans[i][image_size-1] = 0;
+// 	}
 
-	return ans;
+// 	return ans;
 
-}
+// }
 
 //vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m){
 vector<vector<double>> trasponer(vector<vector<double>> matrix){
@@ -391,7 +394,7 @@ vector<vector<double>> trasponer(vector<vector<double>> matrix){
 	return ans;
 }
 
-vector<vector<double> > toX_K(vector<vector<int>>& ans, int K, vector<vector<bool>>& partition){
+vector<vector<double> > toX_K(vector<vector<int>>& original, int K, vector<vector<bool>>& partition, vector<vector<int>>& ans){
 	// K es la linea de partition a tener en cuenta
 	// partition, la matriz de bool
 	//int image_size = 784;
@@ -402,13 +405,13 @@ vector<vector<double> > toX_K(vector<vector<int>>& ans, int K, vector<vector<boo
 		average[j] = 0.0;
 	}
 
-	// Las columnas de partition representan las filas de ans
+	// Las columnas de partition representan las filas de original
 	// Average lo tomamos como vector fila
 	for (int i = 0; i < db_size ; i++){
 		if (partition[K][i] == true){
 			++count_train; 
 			for (int j = 0; j < image_size; j++){
-				average[j] += (double) ans[i][j+1];
+				average[j] += (double) original[i][j+1];
 			}
 		}
 	}
@@ -422,9 +425,12 @@ vector<vector<double> > toX_K(vector<vector<int>>& ans, int K, vector<vector<boo
 	int added = 0;
 	for (int i = 0; i < db_size; i++){
 		if (partition[K][i] == true){
+			vector<int> newImage(image_size, 0);
+			ans.push_back(newImage);
 			for (int j = 0; j < image_size; j++){
 				// j+1 para descartar el label
-				x[added][j] = ans[i][j+1] - average[j];
+				x[added][j] = original[i][j+1] - average[j];
+				ans[added][j] = original[i][j+1];
 			}
 			++added; 
 		}
@@ -465,9 +471,12 @@ vector<vector<double>> toX(vector<vector<int>>& ans, int K){
 //			average[i] += (double) ans[j][i+1];
 //		}
 //	}
-	for(int j=0; j < image_size; j++)
-		for (int i = 0; i < K; i++)
-			average[j] += (double) ans[i][j+1]; // Skip label
+	for(int j=0; j < image_size; j++){
+		for (int i = 0; i < K; i++){
+			average[j] += (double) ans[i][j+1]; // Skip label			
+		}
+	}
+
 
 	for(int j = 0; j < image_size; j++){
 		average[j] /= (double) K;

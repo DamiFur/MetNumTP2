@@ -23,7 +23,8 @@ int db_size = DB_SIZE;
 const int K_DE_KNN = 10;
 
 
-// vector<vector<int>> toImageVector(vector<vector<int>> matrix, int K);
+vector<vector<int>> toImageVector(vector<vector<int>> matrix);
+vector<vector<double>> labelImg(vector<vector<double>> toLabel, vector<vector<int>> labels, int alpha);
 vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha, vector<double> &autovalores);
 vector<vector<double>> toX(vector<vector<double>>& ans, int K);
 vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<int>> images);
@@ -33,7 +34,7 @@ vector<vector<double>> toX(vector<vector<int>>& ans, int K);
 vector<vector<double>> trasponer(vector<vector<double>> matrix);
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y);
 //vector<vector<double> > toX_K(const int ** const ans, const int K, const bool ** const partition);
-vector<vector<double> > toX_K(vector<vector<int>>& original, const int K, vector<vector<bool>>& partition, vector<vector<int>>& ans);
+vector<vector<double> > toX_K(vector<vector<int>>& original, const int K, vector<vector<bool>>& partition);
 vector<vector<double> > PCA_M_K(vector<vector<double> > X_K);
 vector<double> pIteration(vector<vector<double> > &a, int n);
 void print(vector<vector<int> >& M , ostream& out, const string caption, const char sep);
@@ -41,7 +42,8 @@ void print(vector<vector<double> >& M, ostream& out, const string caption, const
 void print(vector<double> & M, ostream& out, const string caption, const char sep);
 void print(int ** M, int m, int n, ostream& out, const string caption, const char sep);
 vector<vector<int>> filtrarPartition(const vector<vector<int>>& x, const vector<vector<bool>>& partition, int k, bool b);
-int knn(const vector<vector<int>>& train, const vector<int>& adivinar, int k);
+template<typename T>
+int knn(const vector<vector<T>>& train, const vector<T>& adivinar, int k);
 double precision(int t_pos[], int f_pos[], int size);
 double precision_(int t_pos[], int f_pos[], double prec[], int size);
 double recall(int t_pos[], int f_neg[], int size);
@@ -197,8 +199,7 @@ int main(int argc, char * argv[]){
 		print(x, output, "Matriz x", ' ');
 		//vector<vector<double> > M;
 		for (int i = 0; i < crossK; i++){
-			vector<vector<int>> parsed_images_K;
-			vector<vector<double> > M = toX_K(ans, i, partitions, parsed_images_K);
+			vector<vector<double> > M = toX_K(ans, i, partitions);
 			vector<vector<double> > N = trasponer(M);
 			vector<vector<double> > NM = multiply(N, M);
 			vector<vector<double> > P = PCA_M_K(M);
@@ -219,14 +220,18 @@ int main(int argc, char * argv[]){
 	// 	//trasformamos train en una matriz donde cada fila tiene el label del digito en la primer columna y 784 columnas más con los pixels
 		// char * quizas sea mejor
 		ofstream expected;
-		expected.open("test_nuestro.expected");
+		expected.open("guess_results");
 
 		// vector<vector<int>> images = toImageVector(ans, K, 1, partitions);
 
 		// vector<vector<double>> x = toX(ans, K);
 		for (int i = 0; i < crossK; i++){
-			vector<vector<int>> parsed_images_K;
-			vector<vector<double>> x = toX_K(ans, i, partitions, parsed_images_K);
+
+			vector<vector<int>> train = filtrarPartition(ans, partitions, i, true);
+
+			vector<vector<int>> test = filtrarPartition(ans, partitions, i, false);
+
+			vector<vector<double>> x = toX_K(ans, i, partitions);
 
 			// cout << "Entro a trasponer" << endl;
 
@@ -248,13 +253,43 @@ int main(int argc, char * argv[]){
 
 			vector<vector<double>> eigenvectors = deflate(M, alpha, autovals);
 
-			vector<vector<double>> tcpca = characteristic_transformation(eigenvectors, parsed_images_K);
+			vector<vector<int>> trainImg = toImageVector(train);
 
-			print(tcpca, ext, "", ';');
+			vector<vector<int>> testImg = toImageVector(test);
 
-			print(eigenvectors, expected, "", '\n');
+			vector<vector<double>> tcpca_train = characteristic_transformation(eigenvectors, trainImg);
+
+			vector<vector<double>> tcpca_test = characteristic_transformation(eigenvectors, testImg);
+
+			vector<vector<double>> trainLabeled = labelImg(tcpca_train, train, alpha);
+
+			vector<vector<double>> testLabeled = labelImg(tcpca_test, test, alpha);
+
+			double p_acertados = 0, p_total = 0;
+			// Para los experimentos - verdaderos/falsos positivos/negativos
+			int t_pos[10] = {0}, f_pos[10] = {0}, f_neg[10] = {0};
+
+			for (int j = 0; j < testLabeled.size(); j++) { // j itera sobre los test de train (v)
+				int guess = knn(trainLabeled, testLabeled[j], kappa);
+				p_total++;
+				if (guess == testLabeled[j][0]) {
+					ext << "Indice " << j << " acertado: " << guess << endl;
+					p_acertados++;
+					t_pos[(int)testLabeled[j][0]]++;
+				} else {
+					ext << "Indice " << j << " errado. Da: " << guess << " - Esperado: " << testLabeled[j][0] << endl;
+					f_pos[guess]++;
+					f_neg[(int)testLabeled[j][0]]++;
+				}
+			}
+
+			// print(tcpca, ext, "", ';');
+
+			// print(eigenvectors, expected, "", '\n');
 
 			print(autovals, output, "", '\n');
+
+
 
 		}
 		// for(int y = 0; y < K; y++){
@@ -363,19 +398,34 @@ void trainMatrixDouble(string train, vector<vector<double>>& ans, int K){
 
 }
 
-// vector<vector<int>> toImageVector(vector<vector<int>> matrix, int cantImag, int k, vector<vector<bool>> partition){
-// 	vector<vector<int>> ans (cantImag, vector<int> (image_size));
+vector<vector<int>> toImageVector(vector<vector<int>> matrix){
+	int cantImag = matrix.size();
+	vector<vector<int>> ans (cantImag, vector<int> (image_size));
 
-// 	for(int i = 0; i < cantImag; i++){
-// 		for(int j = 0; j < image_size-1; j++){
-// 			ans[i][j] = matrix[i][j + 1];
-// 		}
-// 		ans[i][image_size-1] = 0;
-// 	}
+	for(int i = 0; i < cantImag; i++){
+		for(int j = 0; j < image_size; j++){
+			ans[i][j] = matrix[i][j + 1];
+		}
+	}
 
-// 	return ans;
+	return ans;
 
-// }
+}
+
+vector<vector<double>> labelImg(vector<vector<double>> toLabel, vector<vector<int>> labels, int alpha){
+	int s = toLabel.size();
+	vector<vector<double>> resp (s, vector<double> (alpha + 1));
+
+	for(int i = 0; i < s; i++){
+		resp[i][0] = labels[i][0];
+		for(int j = 1; j < alpha + 1; j++){
+			resp[i][j] = toLabel[i][j - 1];
+		}
+	}
+
+	return resp;
+
+}
 
 //vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m){
 vector<vector<double>> trasponer(vector<vector<double>> matrix){
@@ -394,7 +444,7 @@ vector<vector<double>> trasponer(vector<vector<double>> matrix){
 	return ans;
 }
 
-vector<vector<double> > toX_K(vector<vector<int>>& original, int K, vector<vector<bool>>& partition, vector<vector<int>>& ans){
+vector<vector<double> > toX_K(vector<vector<int>>& original, int K, vector<vector<bool>>& partition){
 	// K es la linea de partition a tener en cuenta
 	// partition, la matriz de bool
 	//int image_size = 784;
@@ -425,12 +475,9 @@ vector<vector<double> > toX_K(vector<vector<int>>& original, int K, vector<vecto
 	int added = 0;
 	for (int i = 0; i < db_size; i++){
 		if (partition[K][i] == true){
-			vector<int> newImage(image_size, 0);
-			ans.push_back(newImage);
 			for (int j = 0; j < image_size; j++){
 				// j+1 para descartar el label
 				x[added][j] = original[i][j+1] - average[j];
-				ans[added][j] = original[i][j+1];
 			}
 			++added; 
 		}
@@ -537,7 +584,8 @@ vector<vector<double>> characteristic_transformation(vector<vector<double>> eige
 }
 
 #define cuad(x) ((x)*(x))
-double distancia(const vector<int>& v1, const vector<int>& v2) {
+template<typename T>
+double distancia(const vector<T>& v1, const vector<T>& v2) {
 	// en v1[0] esta el label asi que hay que comparar v1[i+1] con v2[i]
         double ret = 0.0;
         // Compara los tamaños - 
@@ -557,7 +605,8 @@ double distancia(const vector<int>& v1, const vector<int>& v2) {
 
 }
 
-int knn(const vector<vector<int>>& train, const vector<int>& adivinar, int k) {
+template<typename T>
+int knn(const vector<vector<T>>& train, const vector<T>& adivinar, int k) {
 	multiset<pair<double, int>> dist_index;
 
 	for (int i = 0; i<train.size(); ++i) {

@@ -1,0 +1,16 @@
+{
+    ".deps_version": 2, 
+    "g++ -O2 -c ./main.cpp -o ./main.o -std=c++11": {
+        "TP2.dSYM/Contents/Resources/DWARF/TP2": "input-a502c976f0abc333135dfc753808443b", 
+        "main.cpp": "input-d9e80c6595d7b61c56ec6c920cd5e11f", 
+        "main.o": "output-ca455466bf78891259bd56463077ca9f", 
+        "metnum.py": "input-3fbbbab810b79908258bf534321a69a3", 
+        "test1.exit.out": "input-d41d8cd98f00b204e9800998ecf8427e", 
+        "test1.in": "input-c43c2cbda418c9efb396add99fcc9f08", 
+        "test_nuestro.expected": "input-cac6d1af9e7ebb9594ddf41c9f926ec7"
+    }, 
+    "g++ -o ./tp ./main.o": {
+        "main.o": "input-ca455466bf78891259bd56463077ca9f", 
+        "tp": "output-f5a2d9832ca80c533db7110e5ce6ab87"
+    }
+}

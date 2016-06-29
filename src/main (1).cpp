@@ -34,20 +34,23 @@ vector<vector<double>> toX(vector<vector<double>>& ans, int K);
 vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<int>> images);
 void trainMatrix(string train, vector<vector<int>>& ans, int K);
 vector<vector<double>> toX(vector<vector<int>>& ans, int K);
-vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama);
-void toY(vector<vector<double>>& matrix);
 //vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m);
 vector<vector<double>> trasponer(vector<vector<double>> matrix);
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y);
 //vector<vector<double> > toX_K(const int ** const ans, const int K, const bool ** const partition);
 vector<vector<double> > toX_K(vector<vector<int>>& original, const int K, vector<vector<bool>>& partition);
 vector<vector<double> > PCA_M_K(vector<vector<double> > X_K);
+void inplace_matrix_mult_by_scalar(vector<vector<double> >& mat, double scalar);
 vector<double> pIteration(vector<vector<double> > &a, int n);
+//vector<double> pIteration(vector<vector<double> > &A, double &e, int cantMaxIter = 2000, int vueltasSinMejora = 5, int norma = 2);
 void print(vector<vector<int> >& M , ostream& out, const string caption = "<empty caption>", const char sep = ' ');
 void print(vector<vector<double> >& M, ostream& out, const string caption = "<empty caption>", const char sep = ' ');
 void print(int ** M, int m, int n, ostream& out, const string caption = "<empty caption>", const char sep = ' ');
 void print(vector<double> & M, ostream& out, const string caption = "<empty caption>", const char sep = ' ');
 void printAsRow(vector<double>& v, ostream& out, const string caption = "<empty caption>", const char sep = ' ');
+//void print(vector<vector<int> >& M , ostream& out, const string caption, const char sep);
+//void print(vector<vector<double> >& M, ostream& out, const string caption, const char sep);
+//void print(int ** M, int m, int n, ostream& out, const string caption, const char sep);
 vector<vector<int>> filtrarPartition(const vector<vector<int>>& x, const vector<vector<bool>>& partition, int k, bool b);
 template<typename T>
 int knn(const vector<vector<T>>& train, const vector<T>& adivinar, int k);
@@ -58,8 +61,7 @@ double recall_(int t_pos[], int f_neg[], double rec[], int size);
 double f1_score(double prec, double rec);
 double f1_score_(double prec[], double rec[], double f1[], int size);
 void trainMatrixDouble(string train, vector<vector<double>>& ans, int K, bool conLabels = true);
-vector<vector<double>> preY_K(vector<vector<int>> matrix, int part, vector<vector<bool>> partitions);
-void inplace_matrix_mult_by_scalar(vector<vector<double> >& mat, double scalar);
+vector<vector<int>> preY(vector<vector<int>> matrix);
 
 int main(int argc, char * argv[]){
 
@@ -153,11 +155,11 @@ int main(int argc, char * argv[]){
 	vector<vector<int>> ans(K, vector<int>(image_size + 1));
 
 	cout << "Levantando train" << endl;
-    auto t1 = Clock::now();
+        auto t1 = Clock::now();
     trainMatrix(train, ans, K);
-    auto t2 = Clock::now();
+        auto t2 = Clock::now();
     cout << "Train cargado" << endl;
-    std::cout << "Delta t2-t1: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << " nanoseconds" << std::endl;
+        std::cout << "Delta t2-t1: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << " nanoseconds" << std::endl;
 
     // escribimos train
     ofstream temp;
@@ -205,7 +207,7 @@ int main(int argc, char * argv[]){
 	
 		}
 		reconocimiento << acertados / total << endl;
-	}else if (metodo == 3){
+	} else if (metodo == 3){
 		// Calculamos el factor para dividir xtx y conseguir M
         double scalar = 1.0 / (db_size -1);
         cout << "Scalar = " << scalar << endl;
@@ -345,6 +347,7 @@ int main(int argc, char * argv[]){
 		}
 		return 0;
 		Fin Prueba vieja */
+
 	} else if (metodo == 1){
 
 	// 	//trasformamos train en una matriz donde cada fila tiene el label del digito en la primer columna y 784 columnas más con los pixels
@@ -358,71 +361,48 @@ int main(int argc, char * argv[]){
 		for (int i = 0; i < crossK; i++){
 
 			vector<vector<int>> train = filtrarPartition(ans, partitions, i, true);
-
 			vector<vector<int>> test = filtrarPartition(ans, partitions, i, false);
-
 			vector<vector<double>> x = toX_K(ans, i, partitions);
 
 			// cout << "Entro a trasponer" << endl;
-
 			// vector<vector<double>> xt = trasponer(x);
-
 			// cout << "Salgo de trasponer" << endl;
-
 			// cout << "Entro a multiply" << endl;
-
 			// vector<vector<double>> xtx = multiply(xt, x);
-
 			// cout << "Salgo de multiply" << endl;
-
 			vector<vector<double>> M = PCA_M_K(x);
-
 			vector<double> autovals;
-
 			autovals.reserve(alpha);
-
 			vector<vector<double>> eigenvectors = deflate(M, alpha, autovals);
-
 			vector<vector<int>> trainImg = toImageVector(train);
-
 			vector<vector<int>> testImg = toImageVector(test);
-
 			vector<vector<double>> tcpca_train = characteristic_transformation(eigenvectors, trainImg);
-
 			vector<vector<double>> tcpca_test = characteristic_transformation(eigenvectors, testImg);
-
 			vector<vector<double>> trainLabeled = labelImg(tcpca_train, train, alpha);
-
 			vector<vector<double>> testLabeled = labelImg(tcpca_test, test, alpha);
 
 			double p_acertados = 0, p_total = 0;
 			// Para los experimentos - verdaderos/falsos positivos/negativos
 			int t_pos[10] = {0}, f_pos[10] = {0}, f_neg[10] = {0};
-
+			
 			for (int j = 0; j < testLabeled.size(); j++) { // j itera sobre los test de train (v)
-				int guess = knn(trainLabeled, testLabeled[j], kappa);
+				 int guess = knn(trainLabeled, testLabeled[j], kappa);
 				p_total++;
 				if (guess == testLabeled[j][0]) {
-					cout << "Indice " << j << " acertado: " << guess << endl;
 					ext << "Indice " << j << " acertado: " << guess << endl;
 					p_acertados++;
 					t_pos[(int)testLabeled[j][0]]++;
 				} else {
-					cout << "Indice " << j << " errado. Da: " << guess << " - Esperado: " << testLabeled[j][0] << endl;
 					ext << "Indice " << j << " errado. Da: " << guess << " - Esperado: " << testLabeled[j][0] << endl;
 					f_pos[guess]++;
 					f_neg[(int)testLabeled[j][0]]++;
 				}
 			}
+			
 
 			// print(tcpca, ext, "", ';');
-
 			// print(eigenvectors, expected, "", '\n');
-
 			print(autovals, output, "", '\n');
-
-
-
 		}
 		// for(int y = 0; y < K; y++){
 		// 	for(int z = 0; z < 784; z++){
@@ -440,35 +420,9 @@ int main(int argc, char * argv[]){
 
 		// vector<vector<int>> images = toImageVector(ans, K);
 
-		for (int i = 0; i < crossK; i++){
+		vector<vector<double>> x = toX(ans, K);
 
-			vector<vector<int>> train = filtrarPartition(ans, partitions, i, true);
-
-			vector<vector<int>> test = filtrarPartition(ans, partitions, i, false);
-
-			vector<vector<double>> X = toX_K(ans, i, partitions);
-
-			vector<vector<double>> Y = preY_K(ans, i, partitions);
-
-			toY(Y);
-
-			vector<vector<double>> Ws = pls(X, Y, gamma);
-
-			vector<vector<int>> trainImg = toImageVector(train);
-
-			vector<vector<int>> testImg = toImageVector(test);
-
-			vector<vector<double>> tcpls_train = characteristic_transformation(Ws, trainImg);
-
-			vector<vector<double>> tcpls_test = characteristic_transformation(Ws, testImg);
-
-			vector<vector<double>> trainLabeled = labelImg(tcpls_train, train, gamma);
-
-			vector<vector<double>> testLabeled = labelImg(tcpls_test, test, gamma);
-
-			// print(autovals, output, "", '\n');
-
-		}
+		vector<vector<int>> prY = preY(ans);
 
 
 
@@ -500,7 +454,7 @@ int main(int argc, char * argv[]){
 
 
 
- }
+}
 
 vector<vector<int>> filtrarPartition(const vector<vector<int>>& x, const vector<vector<bool>>& partition, int k, bool b) {
 	// Filtra por partition y ademas convierte a double
@@ -533,6 +487,7 @@ void trainMatrix(string train, vector<vector<int>>& ans, int K){
 			ss >> ans[i][j];
 		}
 	}
+	input.close();
 
 }
 
@@ -541,6 +496,9 @@ void trainMatrixDouble(string train, vector<vector<double>>& ans, int image_size
 	ifstream input;
 	input.open(train);
 
+
+	cout << "Adentro de trainMatrixDouble" << endl;
+	cout << "input: " << train << endl;
 	string row;
 
 	for(int i = 0; getline(input, row); i++){
@@ -556,7 +514,8 @@ void trainMatrixDouble(string train, vector<vector<double>>& ans, int image_size
 			for(int j = 0; j < image_size + 1; j++){
 				ss >> ans[i][j+1];
 			}
-		}		
+		}
+		cout << "linea " << i << endl;		
 	}
 	input.close();
 }
@@ -739,6 +698,27 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
 
 }
 
+/*
+vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y){
+	int m = x.size();
+	int n = x[0].size();
+	// Verificar compatibilidad de dimensiones
+	assert(x[0].size() == y.size());
+
+	vector<vector<double>> ans (m, vector<double> (m, 0));
+
+	for(int i = 0; i < m; i++){
+		for(int j = 0; j < m; j++){
+			for(int k = 0; k < n; k++){
+				ans[i][j] += x[i][k] * y[k][j];
+			}
+		}
+	}
+
+	return ans;
+
+}
+*/
 vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<int>> images){
 	int n = images.size();
 	int alpha = eigenvectors.size();
@@ -868,7 +848,6 @@ double norm(vector<double> &b, int metodo = 2){
         }
         return max;
     }
-    return -1.0;
 }
 
 
@@ -912,6 +891,79 @@ vector<double> pIteration(vector<vector<double> > &a, int n, double &e){
     return b;
 }
 
+/*
+vector<double> pIteration(vector<vector<double> > &A, double &e, int cantMaxIter, int vueltasSinMejora, int norma){
+    // Inputs
+    // A = Matriz para calcular sus Avec/Aval
+    // n = corte - cantidad de iteraciones maxima (usar un valor grande comparado a las dimensiones de los autovectores)
+    // e = Salida del autovalor
+    // res = Salida del autovector normalizado
+
+	ofstream temp;
+	temp.open("precalc/trace.log");
+
+    assert( norma == -1 || norma == 1 || norma == 2);
+
+    double quotient = 0; // guarda |autovalor actual / autovalor anterior| (|e / e_ant|)
+    double e_ant;
+
+
+    // Vector inicial - random
+    vector<double> x;
+    vector<double> w;
+    x.reserve(A.size());
+    w.reserve(A.size());
+    srand (time(NULL));
+    for (int i = 0; i < A.size(); ++i){
+        x.push_back((double)(rand() % 1009));
+        w.push_back(0);
+    }
+
+	printAsRow(x, temp, "Vector inicial");
+    // Iteraciones de potencia
+    // - Inicializacion -
+    // x = x^(0)
+    // Coeficiente m
+    int m = 0;
+	int n = 0;
+    // Calculamos el autovalor inicial e^(0)
+    e_ant = norm(x,norma);  // En realidad norm es la funcion Phi, puede ser cualquier norma: norm(x)|norm(x,1)|norm(x,-1)
+                            // aunque debe ser la misma en sucesivas iteraciones
+	temp << "Autovalor inicial: " << setprecision(5) << e_ant << endl;
+
+    // - Cuerpo -
+    while(n < cantMaxIter && m < vueltasSinMejora){     // No se alcanzo la cantidad maxima de iteraciones
+                                                        // ni se consiguieron "vueltasSinMejora" iteraciones donde el cociente entre e^k/e^(k-1) se achique
+        // x^k = A * x^(k-1)
+        vector<double> w = mult(A, x);
+        x = w;
+        normalizar(w); // w es x normalizado (w es el autovector luego de la iteracion)
+
+		temp << "Iteracion: " << n << endl;
+		printAsRow(w, temp, "Autovector");
+
+        e = norm(x, norma);     // En realidad norm es la funcion Phi, puede ser cualquier norma: norm(x)|norm(x,1)|norm(x,-1)
+                        // aunque debe ser la misma en sucesivas iteraciones
+
+		temp << "Autovalor: " << setprecision(5) << e << endl;
+        if (e/e_ant > quotient){
+            m = 0;
+        } else {
+            ++m;
+        }
+        quotient = e / e_ant;
+		temp << "Quotient: " << setprecision(5) << quotient << endl;
+        e_ant = e; // para la siguiente iteracion
+        n++;
+    }
+	temp << "Cantidad de iteraciones: " << cantMaxIter;
+	temp.close();
+    return w;
+}
+
+*/
+
+
 void multConst(vector<vector<double> > &a, double n){
 	for (int i = 0; i < a.size(); ++i){
 		for (int j = 0; j < a.size(); ++j)
@@ -925,7 +977,8 @@ vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha, vector<
 	for (int i = 0; i < alpha; ++i)
 	{
 		double eigenvalue;
-		vector<double> autovect = pIteration(mat, 2000, eigenvalue);
+		//vector<double> autovect = pIteration(mat, eigenvalue);
+		vector<double> autovect = pIteration(mat, 42000, eigenvalue);
 		vector<vector<double> > transp = xxt(autovect);
 		sol.push_back(autovect);
 		autovalores.push_back(eigenvalue);
@@ -945,7 +998,8 @@ vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, i
 		vector<vector<double>> aux = multiply(trasponer(x), y);
 		vector<vector<double>> m_i = multiply(aux,trasponer(aux));
 		//vector<vector<double>> m_i = multiply(x, multiply(trasponer(y), multiply(y, trasponer(x))));
-		w[i] = pIteration(m_i, 100, eigenvalue);
+		//w[i] = pIteration(m_i, eigenvalue);
+		w[i] = pIteration(m_i, 42000, eigenvalue);
 		normalizar(w[i]);
 		vector<double> t_i = mult(x, w[i]);
 		normalizar(t_i);
@@ -962,43 +1016,13 @@ vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, i
 
 }
 
-vector<vector<double>> preY_K(vector<vector<int>> matrix, int part, vector<vector<bool>> partitions){
-	vector<double> aux (10, -1.0);
-	vector<vector<double>> resp;
-	int added = 0;
+vector<vector<int>> preY(vector<vector<int>> matrix){
+	vector<int> aux (10, -1);
+	vector<vector<int>> ans(matrix.size(), vector<int> (aux));
 	for(int i = 0; i < matrix.size(); i++){
-		if (partitions[part][i] == true){
-			resp.push_back(vector<double> (aux));
-			resp[added][matrix[i][0]] = 1.0;
-			added++;
-		}
+		ans[i][matrix[i][0]] = 1;
 	}
-	return resp;
-}
-
-void toY(vector<vector<double>>& matrix){
-	int n = matrix.size();
-	int m = 10;
-	vector<int> average(m, 0.0);
-
-	double sq = sqrt(n - 1);
-
-	for(int i = 0; i < n; i++){
-		for(int j = 0; j < m; j++){
-			average[j] += (double)matrix[i][j];
-		}
-	}
-
-	for(int j = 0; j < m; j++){
-		average[j] /= n;
-	}
-
-	for(int i = 0; i < n; i++){
-		for(int j = 0; j < m; j++){
-			matrix[i][j] -= average[j];
-			matrix[i][j] /= sq;
-		}
-	}
+	return ans;
 }
 
 void print(vector<vector<int> >& M  , ostream& out, const string caption , const char sep){
@@ -1142,4 +1166,5 @@ void inplace_matrix_mult_by_scalar(vector<vector<double> >& M, double scalar){
         }
     }
 }
+
 

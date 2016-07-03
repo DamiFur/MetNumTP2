@@ -33,6 +33,7 @@ vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha, vector<
 vector<vector<double>> toX(vector<vector<double>>& ans, int K);
 vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<int>> images);
 void trainMatrix(string train, vector<vector<int>>& ans, int K);
+void testMatrix(string test, vector<vector<int>>& ans);
 vector<vector<double>> toX(vector<vector<int>>& ans, int K);
 vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama);
 void toY(vector<vector<double>>& matrix);
@@ -526,6 +527,30 @@ void trainMatrix(string train, vector<vector<int>>& ans, int K){
 			ss >> ans[i][j];
 		}
 	}
+
+}
+
+void testMatrix(string test, vector<vector<int>>& ans){
+
+    ifstream input;
+    input.open(test);
+
+    // //Eliminamos la primer fila que tiene los nombres de las columnas que no nos sirven
+    string deleteFirstRow;
+    getline(input, deleteFirstRow);
+    string row;
+
+    for(int i = 0; getline(input, row); i++){
+        replace(row.begin(), row.end(), ',', ' ');
+        stringstream ss;
+        ss << row;
+        for(int j = 0; j < image_size; j++){
+            ss >> ans[i][j+1];
+        }
+        // Ponemos un -1 donde deberia estar el label
+
+        ans[i][0] = -1;
+    }
 
 }
 

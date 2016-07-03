@@ -170,6 +170,7 @@ int main(int argc, char * argv[]){
 		double acertados = 0, total = 0;
 		for(int i = 0; i<partitions.size(); ++i) { // i itera particiones 
 			cout << "Comienza particion " << i << endl;
+            t1 = Clock::now();
 			double p_acertados = 0, p_total = 0;
 			// Para los experimentos - verdaderos/falsos positivos/negativos
 			int t_pos[10] = {0}, f_pos[10] = {0}, f_neg[10] = {0};
@@ -187,7 +188,8 @@ int main(int argc, char * argv[]){
 				}
 			}
 			
-			
+			t2 = Clock::now();
+            cout << "Tiempo en aplicar kNN a la particion: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << " nanoseconds" << endl;
 			reconocimiento << "Particion " << i << ": ";
 			reconocimiento << p_acertados / p_total << endl;
 			acertados += p_acertados;

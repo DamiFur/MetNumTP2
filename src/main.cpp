@@ -704,15 +704,18 @@ vector<vector<double>> toX(vector<vector<int>>& ans, int K){
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y){
     int m = x.size();
     int n = x[0].size();
+    int k = y[0].size();
+
+    cout << m << " " << n << " " << k << endl;
     // Verificar compatibilidad de dimensiones
     assert(x[0].size() == y.size());
 
-    vector<vector<double>> ans (m, vector<double> (m, 0));
+    vector<vector<double>> ans (m, vector<double> (k, 0));
 
 // Paraleliza, no importa como... requiere flag de compilador -fopenmp
 // Baja el calculo de 42 minutos a 35 para 768x42000 * 420000x768
-#pragma omp parallel for
-    for(int i = 0; i < m; i++){
+//#pragma omp parallel for
+   /* for(int i = 0; i < m; i++){
         // itero por k antes que por j, por cuestiones de cache... baja de 35 minutos a 10 el calculo para 768x42000 * 42000x768
         for(int k = 0; k < n; k++){
             if (x[i][k] == 0){
@@ -726,7 +729,14 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
             }
         }
         // cout << "una linea menos: " << i << endl;
-    }
+    }*/
+     for (int i = 0; i < m; ++i){
+     	for (int j = 0; j < k; ++j){
+     		for (int h = 0; h < n; ++h){
+     			ans[i][j] += x[i][h] * y[h][j]; 
+     		}
+     	}
+     }
 
     return ans;
 
@@ -801,10 +811,11 @@ int knn(const vector<vector<T>>& train, const vector<T>& adivinar, int k) {
 }
 
 vector<double> mult(vector<vector<double> > &a, vector<double> &b){
-	vector<double> result (b.size(), 0);
-	for (int i = 0; i < b.size(); ++i)
+	vector<double> result (a.size(), 0);
+	assert(b.size() == a[0].size());
+	for (int i = 0; i < a.size(); ++i)
 	{
-		for (int j = 0; j < a[i].size(); ++j)
+		for (int j = 0; j < b.size(); ++j)
 			result[i] += b[j]*a[i][j];
 	}
 	return result;
@@ -897,7 +908,7 @@ vector<double> pIteration(vector<vector<double> > &a, int n, double &e){
     }
     for (int i = 0; i < b.size(); ++i)
     {
-        if(b[i]<0.000001 and b[i]>(-0.000001))
+        if(b[i]<0.000001 && b[i]>(-0.000001))
             b[i]=0;
     }
     e = prod(b, mult(a,b));
@@ -935,19 +946,25 @@ vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, i
 	vector<vector<double>> w(x.size());
 	double eigenvalue; 
 	for (int i = 0; i<gama; ++i) {
+		cout << "mult 1 - " << i <<  endl;
 		vector<vector<double>> aux = multiply(trasponer(x), y);
+		cout << "mult 2 - " << i <<   endl;
 		vector<vector<double>> m_i = multiply(aux,trasponer(aux));
 		//vector<vector<double>> m_i = multiply(x, multiply(trasponer(y), multiply(y, trasponer(x))));
-		w[i] = pIteration(m_i, 100, eigenvalue);
+		w[i] = pIteration(m_i, 800, eigenvalue);
 		normalizar(w[i]);
+		cout << x.size() << " " <<x[0].size() << " " << w[i].size() << endl;
 		vector<double> t_i = mult(x, w[i]);
+		cout << "size" <<  t_i.size() << endl;
 		normalizar(t_i);
 		vector<vector<double>> ttt = xxt(t_i);
 		//vector<vector<double>> xt = multiply(ttt, x);
-		vector<vector<double>> xt = multiply(x, ttt);
+		cout << "mult 3 - " << i << endl;
+		vector<vector<double>> xt = multiply(ttt, x);
 		matSub(x, xt);
 		//vector<vector<double>> yt = multiply(ttt, y);
-		vector<vector<double>> yt = multiply(y, ttt);
+		cout << "mult 4 - " << i <<  endl;
+		vector<vector<double>> yt = multiply(ttt, y);
 		matSub(y, yt);
 	}
 	cout << "salgo del pls" << endl;

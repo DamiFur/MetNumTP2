@@ -2,30 +2,27 @@
 
 \subsection{kNN}
 
-Para los tests provistos por la catedra, probamos cuanto era el hitrate para tener una primera idea. El hitrate es cuantos acertados tenemos por cada pregunta en promedio. Ambos tests corrieron en alrededor de 30 minutos:\\
+Primero, experimentamos utilizando los tests provistos por la catedra (test1.in y test2.in) con los valores que ya ten\'ia para ver que resultado obtenemos.
 
-Para el tests/test1.in obtuvimos los siguientes resultados:
-\begin{verbatim}
-Particion 0: 0.965238
-Particion 1: 0.972143
-Particion 2: 0.966667
-Particion 3: 0.967857
-Particion 4: 0.96381
-Particion 5: 0.966667
-Particion 6: 0.96619
-Particion 7: 0.972857
-Particion 8: 0.970238
-Particion 9: 0.966429
-Total: 0.96781
-\end{verbatim}
+\begin{table}[H]
+\centering
+\begin{tabular}{| l | c | c | c | c | c |}
+\hline
+\#N\'umero de partici\'on & precision & recall & f1-score & tiempo en nanosegundos & tiempo en minutos \\
+\hline
 
-Para el tests/test2.in obtuvimos los siguientes resultados:
+0 & 0.966017 & 0.96505 & 0.965309 & 321379808901 & 5.35 \\
+1 & 0.972961 & 0.971499 & 0.972077 & 314427110608 & 5.24 \\
+2 & 0.966673 & 0.965729 & 0.965946 & 313701417004 & 5.22 \\
+3 & 0.968304 & 0.967631 & 0.967826 & 315968779893 & 5.26 \\
+4 & 0.964213 & 0.963188 & 0.96337 & 300517782527 & 5 \\
+5 & 0.967247 & 0.966019 & 0.96635 & 300517782527 & 5 \\
+6 & 0.966298 & 0.965881 & 0.965841 & 303090224951 & 5.05 \\
+7 & 0.973695 & 0.972808 & 0.973107 & 318840910396 & 5.31 \\
+8 & 0.970612 & 0.969215 & 0.969717 & 319504538983 & 5.32 \\
+9 & 0.966593 & 0.966049 & 0.966168 & 324889276456 & 5.31 \\
 
-\begin{verbatim}
-Particion 0: 0.969048
-Particion 1: 0.964881
-Particion 2: 0.965476
-Particion 3: 0.965357
-Particion 4: 0.968452
-Total: 0.966643
-\end{verbatim}
+\hline
+\end{tabular}
+\caption{Experimentaci\'on kNN con test1 provisto por la catedra}
+\end{table}

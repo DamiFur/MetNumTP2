@@ -60,6 +60,7 @@ double f1_score_(double prec[], double rec[], double f1[], int size);
 void trainMatrixDouble(string train, vector<vector<double>>& ans, int K, bool conLabels = true);
 vector<vector<double>> preY_K(vector<vector<int>> matrix, int part, vector<vector<bool>> partitions);
 void inplace_matrix_mult_by_scalar(vector<vector<double> >& mat, double scalar);
+vector<vector<double>> fullPCA(vector<vector<int>>& ans, vector<vector<bool>>& partition, int i, vector<double> autovals, vector<vector<int>> train, vector<vector<int>> test, int alpha);
 
 int main(int argc, char * argv[]){
 
@@ -146,7 +147,7 @@ int main(int argc, char * argv[]){
 	int K = db_size;
 
 	ofstream ext;
-	ext.open("test1.exit.out");
+	ext.open("test1.results.out");
 	//trasformamos train en una matriz donde cada fila tiene el label del digito en la primer columna y 784 columnas más con los pixels
 	// char * quizas sea mejor
 	//vector<vector<double>> ans(K, vector<double>(image_size + 1));
@@ -357,31 +358,15 @@ int main(int argc, char * argv[]){
 		// vector<vector<double>> x = toX(ans, K);
 		for (int i = 0; i < crossK; i++){
 
-			vector<vector<int>> train = filtrarPartition(ans, partitions, i, true);
-
-			vector<vector<int>> test = filtrarPartition(ans, partitions, i, false);
-
-			vector<vector<double>> x = toX_K(ans, i, partitions);
-
-			// cout << "Entro a trasponer" << endl;
-
-			// vector<vector<double>> xt = trasponer(x);
-
-			// cout << "Salgo de trasponer" << endl;
-
-			// cout << "Entro a multiply" << endl;
-
-			// vector<vector<double>> xtx = multiply(xt, x);
-
-			// cout << "Salgo de multiply" << endl;
-
-			vector<vector<double>> M = PCA_M_K(x);
-
 			vector<double> autovals;
 
 			autovals.reserve(alpha);
 
-			vector<vector<double>> eigenvectors = deflate(M, alpha, autovals);
+			vector<vector<int>> train = filtrarPartition(ans, partitions, i, true);
+
+			vector<vector<int>> test = filtrarPartition(ans, partitions, i, false);
+
+			vector<vector<double>> eigenvectors = fullPCA(ans, partitions, i, autovals, train, test, alpha);
 
 			vector<vector<int>> trainImg = toImageVector(train);
 
@@ -454,13 +439,19 @@ int main(int argc, char * argv[]){
 
 			vector<vector<double>> Ws = pls(X, Y, gamma);
 
+			cout << "Salgo de Pls" << endl;
+
 			vector<vector<int>> trainImg = toImageVector(train);
 
 			vector<vector<int>> testImg = toImageVector(test);
 
+			cout << "toImageVector" << endl;
+
 			vector<vector<double>> tcpls_train = characteristic_transformation(Ws, trainImg);
 
 			vector<vector<double>> tcpls_test = characteristic_transformation(Ws, testImg);
+
+			cout << "transformacion caracteristica" << endl;
 
 			vector<vector<double>> trainLabeled = labelImg(tcpls_train, train, gamma);
 
@@ -925,7 +916,7 @@ vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha, vector<
 	for (int i = 0; i < alpha; ++i)
 	{
 		double eigenvalue;
-		vector<double> autovect = pIteration(mat, 2000, eigenvalue);
+		vector<double> autovect = pIteration(mat, 800, eigenvalue);
 		vector<vector<double> > transp = xxt(autovect);
 		sol.push_back(autovect);
 		autovalores.push_back(eigenvalue);
@@ -1141,5 +1132,16 @@ void inplace_matrix_mult_by_scalar(vector<vector<double> >& M, double scalar){
             M[i][j] *= scalar;
         }
     }
+}
+
+vector<vector<double>> fullPCA(vector<vector<int>>& ans, vector<vector<bool>>& partition, int i, vector<double> autovals, vector<vector<int>> train, vector<vector<int>> test, int alpha){
+
+	vector<vector<double>> x = toX_K(ans, i, partition);
+
+	vector<vector<double>> M = PCA_M_K(x);
+
+	vector<vector<double>> eigenvectors = deflate(M, alpha, autovals);
+
+	return eigenvectors;
 }
 

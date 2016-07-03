@@ -2,24 +2,37 @@
 
 \subsection{M\'etodos para la experimentaci\'on}
 
-Hablar sobre los metodos elegidos para la implementaci\'on
-
-\subsection{Implementaci\'on}
-
-Estaremos desarrollando la implementaci\'on de nuestro c\'odigo y las distintas aclaraciones que sean pertinentes.
-
-\subsubsection{Inicializaci\'on}
-
-En el main de nuestro programa, leemos la entrada seg\'un lo especificado por el enunciado y el formato de archivos del TP. La funci\'on trainMatrix se encarga de levantar en memoria y llenar una matriz de doubles con la informaci\'on de train en donde cada fila representa una imagen y las columnas sus distintos pixeles. \\
-Nos sera de utilidad una funci\'on llamada filtrarPartition para poder filtrar nuestra partici\'on, algo que utilizaremos a lo largo de nuestro programa para poder analizar nuestro algoritmo en base a la informaci\'on de training.
+Para poder predecir que d\'igito representa una imagen, utilizaremos los siguientes tres metodos que fueron vistos en clase. Para cada uno, tendremos como entrada la matriz de train, test y ciertos parametros de configuraci\'on utilizados por cada uno.
 
 \subsubsection{kNN}
 
-Dada la matriz train, un cierto vector que queremos saber que d\'igito representa y un k, haremos kNN. Para poder obtener los k de menor distintancia a nuestro vector de una manera eficiente, utilizaremos un set en donde iremos metiendo cada distancia y cuando el set supere el tama\~no k, eliminaremos su \'ultimo elemento. Recordemos que el set ordena sus elementos de menor a mayor y el "\'ultimo elemento" representa el mas grande, lo que nos asegura que de esta manera vamos a obtener los k de menor distancia. En caso de haber dos puntos a distancias iguales, va a desempatar por el menor d\'igito por como esta implementado. Decidimos esta manera de desempatar porque es determin\'istica y simple.\\
-Los k puntos mas cercanos luego "votaran" seg\'un el d\'igito que representan y nos quedaremos con el mas votado (En caso de empate, con el menor d\'igito mas votado). Esta ser\'a nuestra soluci\'on usando este metodo.
+El m\'etodo de kNN se basa en tener una lista de vectores, en donde cada uno representando una imagen de train en donde sabemos a qu\'e d\'igito corresponde. Luego, para cada imagen de test, la convertiremos en un vector y compararemos contra la lista de vectores que ya tenemos y nos quedaremos con los k de menor distancia. Estos k vectores mas cercanos luego ''votar\'an'' seg\'un el d\'igito que representan y nos quedaremos con el mas votado.\\
+
+Para poder obtener los k de menor distintancia a nuestro vector de una manera eficiente, utilizaremos un set en donde iremos metiendo cada distancia y cuando el set supere el tama\~no k, eliminaremos su \'ultimo elemento. Recordemos que el set ordena sus elementos de menor a mayor y el ''\'ultimo elemento'' representa el mas grande, lo que nos asegura que de esta manera vamos a obtener los k de menor distancia. En caso de haber dos vectores a distancias iguales, va a desempatar por el menor d\'igito por como esta implementado. Decidimos esta manera de desempatar porque es determin\'istica y simple.\\
+Luego, a la hora de votar, puede haber empates y en ese caso decidimos quedarnos con el menor d\'igito, ya que nuevamente es una manera determin\'istica y simple de resolver empates. 
 
 \subsubsection{PCA}
 
 \subsubsection{PLS-DA}
 
-\subsubsection{M\'etodos de experimentaci\'on}
+\subsection{Detalles generales de la implementaci\'on}
+
+\subsubsection{Inicializaci\'on}
+
+En el main de nuestro programa, leemos la entrada seg\'un lo especificado por el enunciado y el formato de archivos del TP. La funci\'on trainMatrix se encarga de levantar en memoria y llenar una matriz de doubles con la informaci\'on de train en donde cada fila representa una imagen y las columnas sus distintos pixeles. Adem\'as, nos sera de utilidad una funci\'on llamada filtrarPartition para poder filtrar nuestra partici\'on, algo que utilizaremos a lo largo de nuestro programa para poder analizar nuestro algoritmo en base a la informaci\'on de training.
+
+\subsection{M\'etricas para los experimentos}
+
+El trabajo pr\'actico nos propone elegir dos m\'etricas para realizar los experimentos y luego poder comparar cualitativamente cada uno. De las distintas m\'etricas, decidimos elegir ''Precision'', ''Recall'' y adem\'as ''F1-Score'' ya que es muy simple de usar teniendo las anteriores dos m\'etricas implementadas.
+
+\subsubsection{Precision}
+
+Sea $i$ una clase, en este caso, un d\'igito determinado. Llamaremos $tp_i$ a la cantidad de verdaderos positivos, es decir, d\'igitos de test que nuestro algoritmo dice que su d\'igito es $i$ y efectivamente ese es el d\'igito. Llamemos $fp+i$ a la cantidad de falsos positivos, es decir, \'igitos de test que nuestro algoritmo dice que su d\'igito es $i$, pero en realidad es otro d\'igito. La precision, se calcula para una cierta clase $i$ como $\frac{tp_i}{tp_i+fp_i}$. Si queremos la precision de un conjunto de clases, debemos calcular el promedio entre la precision de cada una. En nuestro caso, eso ser\'ia hacer $\frac{\sum_{i=0}^{i<10} \frac{tp_i}{tp_i+fp_i}}{10} $\\
+
+\subsubsection{Recall}
+
+El m\'etodo es similar a Precision, pero utilizaremos $fn_i$ como los falsos negativos de una clase $i$, es decir, d\'igitos que nuestros algoritmo dice que no pertenecen a la clase $i$ pero en realidad si pertenecen. De esta manera, Recall se define como $\frac{tp_i}{tp_i+fn_i}$ y al igual que el m\'etodo anterior, el recall de todas las clases es el promedio de cada una de ellas.
+
+\subsubsection{F1-Score}
+
+Este m\'etodo utiliza Precision y Recall, que tienen calidades distintas para cada clase, para medir un cierto compromiso entre los dos resultados. En concreto, F1-Score se define como $\frac{2 * precision * recall}{precision + recall}$.

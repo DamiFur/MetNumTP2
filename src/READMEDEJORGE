@@ -1,7 +1,11 @@
-Para probar con el test minimal - metodo 3 (prueba de las funciones)
-
 Ejecutar parado en src con los siguientes parametros
 
+tests/test1.in (input file)
+test1.obtained (output file)
+0|1|2|3 (metodo de testeo basico)
+
+// Supersedido
+Para probar con el test minimal - metodo 3 (prueba de las funciones)
 testmin/test1.in (input file)
 testmin/test1_met3.out (output file)
 3 (metodo de testeo basico)

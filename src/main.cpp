@@ -31,7 +31,7 @@ const int K_DE_KNN = 10;
 void dividirMatriz(vector<vector<double> > &m, double c);
 vector<vector<int>> toImageVector(vector<vector<int>> matrix);
 vector<vector<double>> labelImg(vector<vector<double>> toLabel, vector<vector<int>> labels, int alpha);
-vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha, vector<double> &autovalores);
+vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha, vector<double> &autovalores, ostream& debug = std::cout);
 vector<vector<double>> toX(vector<vector<double>>& ans, int K);
 vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<int>> images);
 void trainMatrix(string train, vector<vector<int>>& ans, int K);
@@ -43,7 +43,7 @@ vector<vector<double>> trasponer(vector<vector<double>> matrix);
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y);
 vector<vector<double> > toX_K(vector<vector<int>>& original, const int K, vector<vector<bool>>& partition);
 vector<vector<double> > PCA_M_K(vector<vector<double> > X_K);
-vector<double> pIteration(vector<vector<double> > &a, int n);
+vector<double> pIteration(vector<vector<double> > &a, int n, double &e, ostream& debug = std::cout);
 void print(vector<vector<int> >& M , ostream& out, const string caption = "<empty caption>", const char sep = ' ');
 void print(vector<vector<double> >& M, ostream& out, const string caption = "<empty caption>", const char sep = ' ');
 void print(int ** M, int m, int n, ostream& out, const string caption = "<empty caption>", const char sep = ' ');
@@ -106,6 +106,7 @@ int main(int argc, char * argv[]){
 
 	 ifstream input;
 	 ofstream output;
+	// Archivo de salida para hit-rate y otras metricas
 	 ofstream reconocimiento;
 	 reconocimiento.open("reconocimiento.txt");
 	 input.open(inputPath);
@@ -206,8 +207,9 @@ int main(int argc, char * argv[]){
 
 			output << "Particion" << i << ":" << " ";
 			output << prec_res << ' ' << rec_res << ' ' << f1_res << endl;
-	
+			reconocimiento << prec_res << ' ' << rec_res << ' ' << f1_res << endl;
 		}
+		reconocimiento << "Total particiones" << endl;
 		reconocimiento << acertados / total << endl;
 	}else if (metodo == 3){
 		// Calculamos el factor para dividir xtx y conseguir M
@@ -286,14 +288,17 @@ int main(int argc, char * argv[]){
 */
 		// return 1;
 
-		int cant = 784; // a cambiar por alpha
+		int cant = alpha;
 		vector<double> autovalores;
 		autovalores.reserve(cant);
 		
+		ofstream debug;
+		debug.open("debug.out");
         cout << "Calculando " << cant << " autovalores y autovectores" << endl;
             t1 = Clock::now();
-		vector<vector<double> > autovec = deflate(xtx, cant, autovalores);
+		vector<vector<double> > autovec = deflate(xtx, cant, autovalores, debug);
             t2 = Clock::now();
+		debug.close();
         cout << "Calculados los autovalores y autovectores" << endl;
             std::cout << "Delta t2-t1: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << " nanoseconds" << std::endl;
 		
@@ -735,6 +740,37 @@ vector<vector<double>> toX(vector<vector<int>>& ans, int K){
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y){
     int m = x.size();
     int n = x[0].size();
+    int o = y[0].size();
+    // Verificar compatibilidad de dimensiones
+    assert(x[0].size() == y.size());
+
+    vector<vector<double>> ans (m, vector<double> (m, 0));
+
+// Paraleliza, no importa como... requiere flag de compilador -fopenmp
+// Baja el calculo de 42 minutos a 35 para 768x42000 * 420000x768
+#pragma omp parallel for
+    for(int i = 0; i < m; i++){
+        // itero por k antes que por j, por cuestiones de cache... baja de 35 minutos a 10 el calculo para 768x42000 * 42000x768
+        for(int k = 0; k < n; k++){
+            if (x[i][k] == 0){
+            //if (!x[i][k]){
+                continue;
+            } else {
+                for(int j = 0; j < o; j++){
+                    //ans[i][j] += ((y[k][j] != 0) ? (x[i][k] * y[k][j]) : 0);
+                    ans[i][j] += x[i][k] * y[k][j];
+                }
+            }
+        }
+    }
+
+    return ans;
+
+}
+/* TE CAGO A PALOS
+vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y){
+    int m = x.size();
+    int n = x[0].size();
     int k = y[0].size();
 
     // Verificar compatibilidad de dimensiones
@@ -744,7 +780,7 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
 
 // Paraleliza, no importa como... requiere flag de compilador -fopenmp
 // Baja el calculo de 42 minutos a 35 para 768x42000 * 420000x768
-//#pragma omp parallel for
+#pragma omp parallel for
      for (int i = 0; i < m; ++i){
      	for (int j = 0; j < k; ++j){
      		for (int h = 0; h < n; ++h)
@@ -755,6 +791,7 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
     return ans;
 
 }
+*/
 
 vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<int>> images){
 	int n = images.size();
@@ -928,26 +965,58 @@ double prod(std::vector<double> &v1, std::vector<double> v2){
     return sol;
 }
 
-vector<double> pIteration(vector<vector<double> > &a, int n, double &e){
-    vector<double> b;
-    b.reserve(a.size());
+vector<double> pIteration(vector<vector<double> > &A, int n, double &e, ostream& debug){
+	// Declara e inicializa autovector de salida
+    vector<double> v;
+    v.reserve(A.size());
     srand (time(NULL));
-    for (int i = 0; i < a.size(); ++i){
-		b.push_back((double)(rand() % 1009));
+    for (int i = 0; i < A.size(); ++i){
+		v.push_back((double)(rand() % 1009));
     }
-    while(n>0){
-        vector<double> c = mult(a, b);
+
+	double e0; // Autovalor
+	double d0 = 1000; // Distancia
+	int d; // Distancia
+	
+	// Inicializa autovalor para comparar
+
+	e0 = prod(v, mult(A,v));
+	e0 /= productoInterno(v,v);
+
+	// Itera
+	int i=0, j=0;
+    while(i < n && j < 300){ // Al menos 300 iteraciones
+        vector<double> c = mult(A, v);
         normalizar(c);
-        b = c;
-        n--;
+        v = c; // Autovector en esta iteracion;
+
+		e = prod(v, mult(A,v)); 
+		e /= productoInterno(v,v); // Autovalor en esta iteracion
+
+		d = abs(e - e0);
+		if (d  > d0){ // resetea el contador de corte
+			j = 0;
+		} else if (d < 0.000001){ // incrementa el contador de corte
+			++j;
+		}
+		d0 = d; // Setea distancia minima para siguiente iteracion
+		e0 = e; // Setea autovalor de referencia para siguiente iteracion
+		
+        ++i;
     }
-    for (int i = 0; i < b.size(); ++i)  {
-        if(b[i]<0.000001 && b[i]>(-0.000001))
-            b[i]=0;
+
+	// Trunca errores despreciables en las componentes del autovector
+    for (int k = 0; k < v.size(); ++k)  {
+        if(v[k]<0.000001 && v[k]>(-0.000001))
+            v[k]=0;
     }
-    e = prod(b, mult(a,b));
-    e /= productoInterno(b, b);
-    return b;
+
+	// No hace falta, lo calcula en cada iteracion
+    //e = prod(v, mult(A,v));
+    //e /= productoInterno(v, v);
+
+	debug << i << " iteraciones" << endl;
+    return v;
 }
 
 void multConst(vector<vector<double> > &a, double n){
@@ -957,13 +1026,13 @@ void multConst(vector<vector<double> > &a, double n){
 	}
 }
 
-vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha, vector<double> &autovalores){
+vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha, vector<double> &autovalores, ostream& debug){
 	vector<vector<double> > sol ;
-	// cout << "eigenvalues" << endl;
 	for (int i = 0; i < alpha; ++i)
 	{
 		double eigenvalue;
-		vector<double> autovect = pIteration(mat, 800, eigenvalue);
+		debug << i << " eigenvalue" << endl;
+		vector<double> autovect = pIteration(mat, 800, eigenvalue, debug);
 		vector<vector<double> > transp = xxt(autovect);
 		sol.push_back(autovect);
 		autovalores.push_back(eigenvalue);

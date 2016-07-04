@@ -14,6 +14,7 @@
 #include <iomanip>
 // Tiempos
 #include <chrono>
+
 typedef std::chrono::high_resolution_clock Clock;
 
 
@@ -27,6 +28,7 @@ int db_size = DB_SIZE;
 const int K_DE_KNN = 10;
 
 
+void dividirMatriz(vector<vector<double> > &m, double c);
 vector<vector<int>> toImageVector(vector<vector<int>> matrix);
 vector<vector<double>> labelImg(vector<vector<double>> toLabel, vector<vector<int>> labels, int alpha);
 vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha, vector<double> &autovalores);
@@ -35,12 +37,10 @@ vector<vector<double>> characteristic_transformation(vector<vector<double>> eige
 void trainMatrix(string train, vector<vector<int>>& ans, int K);
 void testMatrix(string test, vector<vector<int>>& ans);
 vector<vector<double>> toX(vector<vector<int>>& ans, int K);
-vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama);
+vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama, vector<double> &autovals);
 void toY(vector<vector<double>>& matrix);
-//vector<vector<double>> trasponer(vector<vector<double>> matrix, int n, int m);
 vector<vector<double>> trasponer(vector<vector<double>> matrix);
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y);
-//vector<vector<double> > toX_K(const int ** const ans, const int K, const bool ** const partition);
 vector<vector<double> > toX_K(vector<vector<int>>& original, const int K, vector<vector<bool>>& partition);
 vector<vector<double> > PCA_M_K(vector<vector<double> > X_K);
 vector<double> pIteration(vector<vector<double> > &a, int n);
@@ -428,6 +428,8 @@ int main(int argc, char * argv[]){
 
 		// vector<vector<int>> images = toImageVector(ans, K);
 
+		vector<double> autovals;
+
 		for (int i = 0; i < crossK; i++){
 
 			vector<vector<int>> train = filtrarPartition(ans, partitions, i, true);
@@ -436,11 +438,13 @@ int main(int argc, char * argv[]){
 
 			vector<vector<double>> X = toX_K(ans, i, partitions);
 
+			dividirMatriz(X, sqrt(X.size()));
+
 			vector<vector<double>> Y = preY_K(ans, i, partitions);
 
 			toY(Y);
 
-			vector<vector<double>> Ws = pls(X, Y, gamma);
+			vector<vector<double>> Ws = pls(X, Y, gamma, autovals);
 
 			cout << "Salgo de Pls" << endl;
 
@@ -462,7 +466,7 @@ int main(int argc, char * argv[]){
 
 			vector<vector<double>> testLabeled = labelImg(tcpls_test, test, gamma);
 
-			print(Ws, output, "", '\n');
+			print(autovals, output, "", '\n');
 
 		}
 
@@ -842,7 +846,7 @@ vector<double> mult(vector<vector<double> > &a, vector<double> &b){
 	return result;
 }
 
-vector<vector<double> > vectorMult(vector<double> &a, vector<double> b){
+vector<vector<double> > vectorMult(vector<double> &a, vector<double> &b){
 	vector<vector<double> > sol (a.size(), vector<double> (b.size()));
 	for (int i = 0; i < a.size(); ++i){
 		for (int j = 0; j < b.size(); ++j)
@@ -915,7 +919,7 @@ void normalizar(vector<double> &b){
 	}
 }
 
-double prod(std::vector<double> v1, std::vector<double> v2){
+double prod(std::vector<double> &v1, std::vector<double> v2){
     double sol =0;
     for (int i = 0; i < v1.size(); ++i)
     {
@@ -937,8 +941,7 @@ vector<double> pIteration(vector<vector<double> > &a, int n, double &e){
         b = c;
         n--;
     }
-    for (int i = 0; i < b.size(); ++i)
-    {
+    for (int i = 0; i < b.size(); ++i)  {
         if(b[i]<0.000001 && b[i]>(-0.000001))
             b[i]=0;
     }
@@ -972,15 +975,17 @@ vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha, vector<
 	return sol;
 }
 
-vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama) {
+vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama, vector<double> &autovals) {
 	cout << "Entro al pls" << endl;
 	vector<vector<double>> w (gama);
+	autovals.resize(gama);
 	double eigenvalue; 
 	for (int i = 0; i<gama; ++i) {
 		vector<vector<double>> aux = multiply(trasponer(x), y);
 		vector<vector<double>> m_i = multiply(aux,trasponer(aux));
 		//vector<vector<double>> m_i = multiply(x, multiply(trasponer(y), multiply(y, trasponer(x))));
 		w[i] = pIteration(m_i, 800, eigenvalue);
+		autovals[i] = eigenvalue;
 		normalizar(w[i]);
 		vector<double> t_i = mult(x, w[i]);
 		normalizar(t_i);
@@ -990,6 +995,7 @@ vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, i
 		vector<double> tty  = tmult(t_i, y);
 		vector<vector<double> > ty  = vectorMult(t_i, tty);
 		matSub(y, ty);
+
 	}
 	cout << "salgo del pls" << endl;
 	return w;
@@ -1089,6 +1095,13 @@ void print(int ** M, int m, int n, ostream& out, const string caption , const ch
 		out << setprecision(5) << M[i][n-1] << endl;
 	}
 	// out << endl;
+}
+
+void dividirMatriz(vector<vector<double> > &m, double c){
+	for (int i = 0; i < m.size(); ++i){
+		for (int j = 0; j < m[0].size(); ++j)
+			m[i][j] /= c;
+	}
 }
 
 

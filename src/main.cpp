@@ -452,6 +452,8 @@ int main(int argc, char * argv[]){
 
 			vector<vector<double>> tcpls_train = characteristic_transformation(Ws, trainImg);
 
+			cout << "train anduvo" << endl;
+
 			vector<vector<double>> tcpls_test = characteristic_transformation(Ws, testImg);
 
 			cout << "transformacion caracteristica" << endl;
@@ -835,6 +837,17 @@ int knn(const vector<vector<T>>& train, const vector<T>& adivinar, int k) {
 	return ganador;
 }
 
+vector<double> tmult(vector<double> &b, vector<vector<double> > &a){
+	vector<double> result (a[0].size(), 0);
+	assert(b.size() == a.size());
+	for (int i = 0; i < a[0].size(); ++i)
+	{
+		for (int j = 0; j < b.size(); ++j)
+			result[i] += b[j]*a[j][i];
+	}
+	return result;
+}
+
 vector<double> mult(vector<vector<double> > &a, vector<double> &b){
 	vector<double> result (a.size(), 0);
 	assert(b.size() == a[0].size());
@@ -844,6 +857,15 @@ vector<double> mult(vector<vector<double> > &a, vector<double> &b){
 			result[i] += b[j]*a[i][j];
 	}
 	return result;
+}
+
+vector<vector<double> > vectorMult(vector<double> &a, vector<double> b){
+	vector<vector<double> > sol (a.size(), vector<double> (b.size()));
+	for (int i = 0; i < a.size(); ++i){
+		for (int j = 0; j < b.size(); ++j)
+			sol[i][j]= a[i]*b[j];
+	}
+	return sol;
 }
 
 vector<vector<double> > xxt(vector<double> &v){
@@ -857,8 +879,9 @@ vector<vector<double> > xxt(vector<double> &v){
 
 void matSub(vector<vector<double> > &a, vector<vector<double> > &b){
 	int tam = a.size();
+	int tam2 = a[0].size();
 	for (int i = 0; i < tam; i++){
-		for (int j = 0; j < tam; ++j){
+		for (int j = 0; j < tam2; ++j){
 			a[i][j] -= b[i][j];		
 		}
 	}
@@ -978,19 +1001,27 @@ vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, i
 		//vector<vector<double>> m_i = multiply(x, multiply(trasponer(y), multiply(y, trasponer(x))));
 		w[i] = pIteration(m_i, 800, eigenvalue);
 		normalizar(w[i]);
-		cout << x.size() << " " <<x[0].size() << " " << w[i].size() << endl;
+		cout << "hacemos mult()" << endl;
 		vector<double> t_i = mult(x, w[i]);
-		cout << "size" <<  t_i.size() << endl;
+		cout << "normalizar" << endl;
 		normalizar(t_i);
-		vector<vector<double>> ttt = xxt(t_i);
+		cout << "xxt" << endl;
+		vector<double> ttx = tmult(t_i, x);
+		vector<vector<double> > xt = vectorMult(t_i, ttx);
+		//vector<vector<double>> ttt = xxt(t_i);
 		//vector<vector<double>> xt = multiply(ttt, x);
 		cout << "mult 3 - " << i << endl;
-		vector<vector<double>> xt = multiply(ttt, x);
+
+		cout << x.size() << " " << x[0].size() << " " << xt.size() << " " << xt[0].size() << endl;
+		//vector<vector<double>> xt = multiply(ttt, x);
 		matSub(x, xt);
 		//vector<vector<double>> yt = multiply(ttt, y);
+		cout << "no pincho" << endl;
+		vector<double> tty  = tmult(t_i, y);
+		vector<vector<double> > ty  = vectorMult(t_i, tty);
 		cout << "mult 4 - " << i <<  endl;
-		vector<vector<double>> yt = multiply(ttt, y);
-		matSub(y, yt);
+		//vector<vector<double>> yt = multiply(ttt, y);
+		matSub(y, ty);
 	}
 	cout << "salgo del pls" << endl;
 	return w;

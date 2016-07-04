@@ -1032,7 +1032,7 @@ vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha, vector<
 	{
 		double eigenvalue;
 		debug << i << " eigenvalue" << endl;
-		vector<double> autovect = pIteration(mat, 800, eigenvalue, debug);
+		vector<double> autovect = pIteration(mat, 2000, eigenvalue, debug);
 		vector<vector<double> > transp = xxt(autovect);
 		sol.push_back(autovect);
 		autovalores.push_back(eigenvalue);
@@ -1053,7 +1053,7 @@ vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, i
 		vector<vector<double>> aux = multiply(trasponer(x), y);
 		vector<vector<double>> m_i = multiply(aux,trasponer(aux));
 		//vector<vector<double>> m_i = multiply(x, multiply(trasponer(y), multiply(y, trasponer(x))));
-		w[i] = pIteration(m_i, 800, eigenvalue);
+		w[i] = pIteration(m_i, 2000, eigenvalue);
 		autovals[i] = eigenvalue;
 		normalizar(w[i]);
 		vector<double> t_i = mult(x, w[i]);

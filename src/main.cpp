@@ -462,7 +462,7 @@ int main(int argc, char * argv[]){
 
 			vector<vector<double>> testLabeled = labelImg(tcpls_test, test, gamma);
 
-			// print(autovals, output, "", '\n');
+			print(Ws, output, "", '\n');
 
 		}
 
@@ -733,7 +733,6 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
     int n = x[0].size();
     int k = y[0].size();
 
-    cout << m << " " << n << " " << k << endl;
     // Verificar compatibilidad de dimensiones
     assert(x[0].size() == y.size());
 
@@ -742,26 +741,10 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
 // Paraleliza, no importa como... requiere flag de compilador -fopenmp
 // Baja el calculo de 42 minutos a 35 para 768x42000 * 420000x768
 //#pragma omp parallel for
-   /* for(int i = 0; i < m; i++){
-        // itero por k antes que por j, por cuestiones de cache... baja de 35 minutos a 10 el calculo para 768x42000 * 42000x768
-        for(int k = 0; k < n; k++){
-            if (x[i][k] == 0){
-            //if (!x[i][k]){
-                continue;
-            } else {
-                for(int j = 0; j < m; j++){
-                    //ans[i][j] += ((y[k][j] != 0) ? (x[i][k] * y[k][j]) : 0);
-                    ans[i][j] += x[i][k] * y[k][j];
-                }
-            }
-        }
-        // cout << "una linea menos: " << i << endl;
-    }*/
      for (int i = 0; i < m; ++i){
      	for (int j = 0; j < k; ++j){
-     		for (int h = 0; h < n; ++h){
-     			ans[i][j] += x[i][h] * y[h][j]; 
-     		}
+     		for (int h = 0; h < n; ++h)
+     			ans[i][j] += x[i][h] * y[h][j];
      	}
      }
 
@@ -991,36 +974,21 @@ vector<vector<double> > deflate(vector<vector<double> > &mat, int alpha, vector<
 
 vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama) {
 	cout << "Entro al pls" << endl;
-	vector<vector<double>> w(x.size());
+	vector<vector<double>> w (gama);
 	double eigenvalue; 
 	for (int i = 0; i<gama; ++i) {
-		cout << "mult 1 - " << i <<  endl;
 		vector<vector<double>> aux = multiply(trasponer(x), y);
-		cout << "mult 2 - " << i <<   endl;
 		vector<vector<double>> m_i = multiply(aux,trasponer(aux));
 		//vector<vector<double>> m_i = multiply(x, multiply(trasponer(y), multiply(y, trasponer(x))));
 		w[i] = pIteration(m_i, 800, eigenvalue);
 		normalizar(w[i]);
-		cout << "hacemos mult()" << endl;
 		vector<double> t_i = mult(x, w[i]);
-		cout << "normalizar" << endl;
 		normalizar(t_i);
-		cout << "xxt" << endl;
 		vector<double> ttx = tmult(t_i, x);
 		vector<vector<double> > xt = vectorMult(t_i, ttx);
-		//vector<vector<double>> ttt = xxt(t_i);
-		//vector<vector<double>> xt = multiply(ttt, x);
-		cout << "mult 3 - " << i << endl;
-
-		cout << x.size() << " " << x[0].size() << " " << xt.size() << " " << xt[0].size() << endl;
-		//vector<vector<double>> xt = multiply(ttt, x);
 		matSub(x, xt);
-		//vector<vector<double>> yt = multiply(ttt, y);
-		cout << "no pincho" << endl;
 		vector<double> tty  = tmult(t_i, y);
 		vector<vector<double> > ty  = vectorMult(t_i, tty);
-		cout << "mult 4 - " << i <<  endl;
-		//vector<vector<double>> yt = multiply(ttt, y);
 		matSub(y, ty);
 	}
 	cout << "salgo del pls" << endl;

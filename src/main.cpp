@@ -740,7 +740,7 @@ vector<vector<double>> toX(vector<vector<int>>& ans, int K){
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y){
     int m = x.size();
     int n = x[0].size();
-    int o = y[0].size();
+    int r = y[0].size();
     // Verificar compatibilidad de dimensiones
     assert(x[0].size() == y.size());
 
@@ -756,7 +756,7 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
             //if (!x[i][k]){
                 continue;
             } else {
-                for(int j = 0; j < o; j++){
+                for(int j = 0; j < r; j++){
                     //ans[i][j] += ((y[k][j] != 0) ? (x[i][k] * y[k][j]) : 0);
                     ans[i][j] += x[i][k] * y[k][j];
                 }

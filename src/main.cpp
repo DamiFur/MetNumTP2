@@ -159,21 +159,24 @@ int main(int argc, char * argv[]){
     auto t1 = Clock::now();
     trainMatrix(train, ans, K);
     auto t2 = Clock::now();
-    cout << "Train cargado" << endl;
+    cout << "Train cargado ";
     std::cout << "Delta t2-t1: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << " nanoseconds" << std::endl;
+
 
     // escribimos train
     ofstream temp;
+/*
     temp.open("./precalc/train");
     print(ans, temp);
     temp.close();
+*/
 
 	if (metodo == 0) {
 		double acertados = 0, total = 0;
-		for(int i = 0; i<partitions.size(); ++i) { // i itera particiones 
+		for(int i = 0; i < partitions.size(); ++i) { // i itera particiones 
 			cout << "Comienza particion " << i << endl;
             t1 = Clock::now();
-			double p_acertados = 0, p_total = 0;
+			double p_acertados = 0, p_total = 0; // p de partitition
 			// Para los experimentos - verdaderos/falsos positivos/negativos
 			int t_pos[10] = {0}, f_pos[10] = {0}, f_neg[10] = {0};
 			vector<vector<int>> x = filtrarPartition(ans, partitions, i, true);
@@ -211,149 +214,99 @@ int main(int argc, char * argv[]){
 		}
 		reconocimiento << "Total particiones" << endl;
 		reconocimiento << acertados / total << endl;
-	}else if (metodo == 3){
+	} else if (metodo == 3){
 		// Calculamos el factor para dividir xtx y conseguir M
         double scalar = 1.0 / (db_size -1);
-        cout << "Scalar = " << scalar << endl;
+        // cout << "Scalar = " << scalar << endl;
 
         // Calculamos x
         cout << "Calculando X" << endl;
             t1 = Clock::now();
         vector<vector<double>> x = toX(ans, K);
             t2 = Clock::now();
-        cout << "X calculado" << endl;
+        cout << "X calculado ";
             std::cout << "Delta t2-t1: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << " nanoseconds" << std::endl;
 
+/*
         // Escribimos x
         temp.open("./precalc/x");
         print(x, temp);
         temp.close();
+*/
 
         // Calculamos x traspuesta
         cout << "Trasponiendo x" << endl;
             t1 = Clock::now();
         vector<vector<double> > xt = trasponer(x);
             t2 = Clock::now();
-        cout << "X' calculado" << endl;
+        cout << "X' calculado ";
             std::cout << "Delta t2-t1: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << " nanoseconds" << std::endl;
 
+/*
         // Escribimos x traspuesta
         temp.open("./precalc/xt");
         print(xt, temp);
         temp.close();
+*/
 
         // Calculamos x traspuesta * x
         cout << "multiplicando x' por x" << endl;
             t1 = Clock::now();
         vector<vector<double> > xtx = multiply(xt, x);
             t2 = Clock::now();
-        cout << "x' * x calculado" << endl;
+        cout << "x' * x calculado " ;
             std::cout << "Delta t2-t1: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << " nanoseconds" << std::endl;
 
+/*
 		 // Escribimos x traspuesta * x
         temp.open("./precalc/xtx");
         print(xtx, temp);
         temp.close();
-
+*/
         // Calculamos M
         cout << "Convirtiendo xtx en M (multiplicando por escalar)" << endl;
             t1 = Clock::now();
         inplace_matrix_mult_by_scalar(xtx, scalar);
             t2 = Clock::now();
-        cout << "M calculado" << endl;
+        cout << "M calculado ";
             std::cout << "Delta t2-t1: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << " nanoseconds" << std::endl;
 
+/*
         // Escribimos M
         temp.open("./precalc/M");
         print(xtx, temp);
         temp.close();
+*/
+
 
 
 		// Calculamos autovectores y autovalores de M 
-
- /*
-		vector<vector<double>> xtx(K, vector<double>(image_size));
-    		cout << "Levantando M" << endl;
-        	t1 = Clock::now();
-		trainMatrixDouble("./precalc/M", xtx, image_size, false);
-        	t2 = Clock::now();
-    		cout << "M cargado" << endl;
-        	std::cout << "Delta t2-t1: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << " nanoseconds" << std::endl;
-		
-		// Escribimos M'
-		temp.open("./precalc/Mprima");
-		print(xtx, temp);
-		temp.close();
-		
-*/
-		// return 1;
-
-		int cant = alpha;
+		//int cant = alpha;
 		vector<double> autovalores;
-		autovalores.reserve(cant);
+		//autovalores.reserve(cant);
+		autovalores.reserve(alpha);
 		
 		ofstream debug;
 		debug.open("debug.out");
-        cout << "Calculando " << cant << " autovalores y autovectores" << endl;
+        cout << "Calculando " << alpha << " autovalores y autovectores" << endl;
             t1 = Clock::now();
-		vector<vector<double> > autovec = deflate(xtx, cant, autovalores, debug);
+		vector<vector<double> > autovec = deflate(xtx, alpha, autovalores, debug);
             t2 = Clock::now();
 		debug.close();
-        cout << "Calculados los autovalores y autovectores" << endl;
+        cout << "Calculados los autovalores y autovectores ";
             std::cout << "Delta t2-t1: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << " nanoseconds" << std::endl;
 		
+		// Escribimos los autovalores
 		temp.open("./precalc/autovalores");
-			for (int i = 0; i < cant; i++){
+			for (int i = 0; i < alpha ; i++){
 				temp << autovalores[i] << endl;
 			}
 		temp.close();
 		
 		
-		
-		
-        /*
-        ofstream out_xtx;
-        out_xtx.open("precalc/xtx");
-        cout << "Escribiendo la matriz M" << endl;
-            t1 = Clock::now();
-        print(xtx, out_xtx);
-            t2 = Clock::now();
-        cout << "M escrita" << endl;
-            std::cout << "Delta t2-t1: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << " nanoseconds" << std::endl;
-        out_xtx.close();
-        */
 
-        // Vuelta anticipada
-        return 1;
+        return 0;
 
-		/* Prueba Vieja
-		vector<vector<double>> x = toX(ans, K);
-		//const char sep = ';';
-		//print(x, cout, caption, sep);
-		//print(x, cout, "Matriz x", ';');
-		ostringstream oss;
-
-		print(ans, output, "Matriz Ans", ' ');
-		print(x, output, "Matriz x", ' ');
-		//vector<vector<double> > M;
-		for (int i = 0; i < crossK; i++){
-			vector<vector<double> > M = toX_K(ans, i, partitions);
-			vector<vector<double> > N = trasponer(M);
-			vector<vector<double> > NM = multiply(N, M);
-			vector<vector<double> > P = PCA_M_K(M);
-			string caption = "Matriz x_k" + to_string(i);
-			print (M, output, caption, ' ');
-			caption = "Matriz x_k" + to_string(i) + " traspuesta";
-			print(N, output, caption, ' ');
-			caption = "Matriz (x_k" + to_string(i) + ")t * x_k" + to_string(i);
-			print(NM, output, caption, ' ');
-			caption = "Matriz x_k" + to_string(i) + " PCA - Matriz(M)";
-			print(P, output, caption, ' ');
-
-			
-		}
-		return 0;
-		Fin Prueba vieja */
 	} else if (metodo == 1){
 
 	// 	//trasformamos train en una matriz donde cada fila tiene el label del digito en la primer columna y 784 columnas más con los pixels
@@ -493,19 +446,8 @@ int main(int argc, char * argv[]){
 
 	}
 
-/*
 
-	vector<vector<double>> xt = trasponer(x);
-
-	vector<vector<double>> xtx = multiply(xt, x);
-*/
-
-
-
-
-
-
- }
+}
 
 vector<vector<int>> filtrarPartition(const vector<vector<int>>& x, const vector<vector<bool>>& partition, int k, bool b) {
 	// Filtra por partition y ademas convierte a double
@@ -604,6 +546,8 @@ vector<vector<int>> toImageVector(vector<vector<int>> matrix){
 
 }
 
+// Agarra matriz "toLabel", y matriz "labels" devuelve la matriz "toLabel" con los labels
+// Si no la deserdeno puede hacerse con un vector de labels
 vector<vector<double>> labelImg(vector<vector<double>> toLabel, vector<vector<int>> labels, int alpha){
 	int s = toLabel.size();
 	vector<vector<double>> resp (s, vector<double> (alpha + 1));
@@ -636,6 +580,8 @@ vector<vector<double>> trasponer(vector<vector<double>> matrix){
 	return ans;
 }
 
+// filtra "original" por medio de "partition" y lo convierte a double centrandolo en X_0 (average)
+// NO LO DEVUELVE DIVIDIDO POR sqrt(n-1)!!!
 vector<vector<double> > toX_K(vector<vector<int>>& original, int K, vector<vector<bool>>& partition){
 	// K es la linea de partition a tener en cuenta
 	// partition, la matriz de bool
@@ -794,8 +740,9 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
 */
 
 vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<int>> images){
-	int n = images.size();
-	int alpha = eigenvectors.size();
+	int n = images.size(); 	// Cantidad imagenes
+							// images tiene x_i como vectores fila
+	int alpha = eigenvectors.size(); // Dimensiones a considerar
 
 	vector<vector<double>> ans (n, vector<double> (alpha, 0));
 

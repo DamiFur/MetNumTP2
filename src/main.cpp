@@ -214,6 +214,7 @@ int main(int argc, char * argv[]){
 
 		int acertados_tot = 0, total_tot = 0;
 		// Levanto partition
+		cout << "Levantando partition\n";
 		vector<vector<bool>> partitions(crossK, vector<bool>(db_size));
 		for (int i = 0; i < crossK; ++i){
 			for (int j = 0; j < db_size; ++j){
@@ -223,42 +224,54 @@ int main(int argc, char * argv[]){
 			}
 		}
 		input.close();
+		cout << "Partition levantado!\n";
 		// Levanto imagenes
+		cout << "Levantando train\n";
 		vector<vector<int>> Train (db_size, vector<int>(image_size + 1));
     	trainMatrix(train_s, Train, db_size);
+    	cout << "Train levantado!\n";
 
 		// Itero sobre las particiones
 		for (unsigned int i = 0; i < partitions.size(); ++i){
+			printf("Calculando partition %i\n", i);
 			unsigned int p_acertados = 0, p_total = 0;
 			int t_pos[10] = {0}, f_pos[10] = {0}, f_neg[10] = {0};
 			vector<vector<int>> Train_i = filtrarPartition(Train, partitions, i, true);
 			vector<vector<int>> Test_i = filtrarPartition(Train, partitions, i, false);
 
-			// Calcular autovals de los dos metodos
-			// PCA
+			// Calcular autovals de los dos metodos, solo si el metodo es distinto
+			// a 0
 			vector<double> PCA_evals;
-			PCA_evals.reserve(alpha);
-			vector<vector<double> > PCA_evec = fullPCA(Train, PCA_evals, alpha, partitions, i, debug);
-			// PLS-DA
+			vector<vector<double> > PCA_evec;
 			vector<double> PLS_evals;
-			PLS_evals.reserve(gamma);
-			vector<vector<double> > PLS_evec = fullPLS(Train, PLS_evals, gamma, partitions, i, debug);
-			// Escritura Autovalores en output
-			for (int j = 0; j < alpha; ++j){
-				output << PCA_evals[j] << endl;
-			} 
-			for (int j = 0; j < gamma; ++j){ 
-				output << PLS_evals[j] << endl; 
+			vector<vector<double> > PLS_evec;
+			if (metodo != 0) {
+				// PCA
+				PCA_evals.reserve(alpha);
+				PCA_evec = fullPCA(Train, PCA_evals, alpha, partitions, i, debug);
+				// PLS-DA
+				PLS_evals.reserve(gamma);
+				PLS_evec = fullPLS(Train, PLS_evals, gamma, partitions, i, debug);
+				// Escritura Autovalores en output
+				for (int j = 0; j < alpha; ++j){
+					output << PCA_evals[j] << endl;
+				} 
+				for (int j = 0; j < gamma; ++j){ 
+					output << PLS_evals[j] << endl; 
+				}
 			}
 			// mantengo output abierto para siguiente iteracion
 
 			// aplicacion del metodo para la particion actual
 			if (metodo == 0){
+				auto t1 = Clock::now();
 				for (p_total = 0; p_total < Test_i.size(); p_total++){ // itera sobre los vectores de "Test_i" para particion actual
 					// knn esta diseñando para que trabaje tanto con tests reales como particionados (con o sin label)
 					int guess = knn(Train_i, Test_i[p_total], kappa);
 					acum_metrics(t_pos, f_pos, f_neg, p_acertados, guess, Test_i[p_total][0]);
 				}
+				auto t2 = Clock::now();
+				std::cout << "Tiempo en correr knn: " << std::chrono::duration_cast<std::chrono::minutes>(t2 - t1).count() << " minutos" << std::endl;
 			} else if (metodo == 1){
 				vector<vector<int>> trainImg = toImageVector(Train_i);
 				vector<vector<int>> testImg = toImageVector(Test_i);

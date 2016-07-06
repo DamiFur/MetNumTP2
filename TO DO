@@ -1,12 +1,12 @@
 TODO:
 
-0 - Que ande PCA y el código tenga el formato de la cátedra
+0 - Codigo: falta mejorar precisión PLS
 
 1 - Introducción
 
 2 - Desarrollo:
-	- Explicación KNN (Corrigiendo Dami)
-	- Explicación PCA
+	- Explicación KNN (listo)
+	- Explicación PCA (listo) (revisar con ayudante)
 	- Explicación PLS
 
 3 - Informe Implementación (falta revisar)

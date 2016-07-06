@@ -36,3 +36,20 @@ El m\'etodo es similar a Precision, pero utilizaremos $fn_i$ como los falsos neg
 \subsubsection{F1-Score}
 
 Este m\'etodo utiliza Precision y Recall, que tienen calidades distintas para cada clase, para medir un cierto compromiso entre los dos resultados. En concreto, F1-Score se define como $\frac{2 * precision * recall}{precision + recall}$.
+
+\subsection{Train provisto por la c\'atedra}
+
+Calculamos cu\'antas veces aparec\'ia cada d\'igito en los tests provistos por la c\'atedra utilizando un script hecho en python contando los labels. Nos parec\'ia interesante para la discusi\'on esta informaci\'on y nos puede llegar a ser \'util. El resultado que obtuvimos fue:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{| l | c | c | c | c | c | c | c | c | c | c |}
+\hline
+& 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\
+\hline
+Aparici\'on & 4132 & 4684 & 4177 & 4351 & 4072 & 3795 & 4137 & 4401 & 4063 & 4188\\
+
+\hline
+\end{tabular}
+\caption{Cantidad de casos de train por d\'igito}
+\end{table}

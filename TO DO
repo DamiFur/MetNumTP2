@@ -1,0 +1,28 @@
+TODO:
+
+0 - Que ande PCA y el código tenga el formato de la cátedra
+
+1 - Introducción
+
+2 - Desarrollo:
+	- Explicación KNN (Corrigiendo Dami)
+	- Explicación PCA
+	- Explicación PLS
+
+3 - Informe Implementación (falta revisar)
+
+4 - Analisis de cómo afecta el tamaño:
+	- Optimización en el orden de multiplicació  de las matrices
+	- Distintos tamaños de imágenes
+
+5 - Cómo mejoramos la precisión:
+	- Detalle
+	- Métricas para distintas versiones del código
+
+6 - Experimentos pedidos:
+	- knn para distintos k. Compromiso de tiempo vs efectividad
+	- pca y pls para distintos alpha, gamma y kappa. Comparar entre si y con knn. También compromiso de tiempo vs efectividad.
+	- Cual es la mejor alternativa de todo lo analizado anteriormente
+	- Correr el método óptimo para train entero sin particiones y participar en kaggle. Tomar el tiempo de cuanto tarda esto
+
+7 - Mini conclusión

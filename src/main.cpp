@@ -63,9 +63,10 @@ double f1_score_(double prec[], double rec[], double f1[], int size);
 void trainMatrixDouble(string train, vector<vector<double>>& ans, int K, bool conLabels = true);
 vector<vector<double>> preY_K(vector<vector<int>> matrix, int part, vector<vector<bool>> partitions);
 void inplace_matrix_mult_by_scalar(vector<vector<double> >& mat, double scalar);
+void inplace_matrix_div_by_scalar(vector<vector<double> >& M, double scalar);
 
-vector<vector<double>> fullPCA(vector<vector<int>>& ans, vector<double>& autovals, int alpha, vector<vector<bool>>& partition, int i); // i = -1: sin particiones
-vector<vector<double>> fullPLS(vector<vector<int>>& ans, vector<double>& autovals, int gamma, vector<vector<bool>>& partition, int i); // i = -1: sin particiones
+vector<vector<double>> fullPCA(vector<vector<int>>& ans, vector<double>& autovals, int alpha, vector<vector<bool>>& partition, int i, ostream& debug = cout); // i = -1: sin particiones
+vector<vector<double>> fullPLS(vector<vector<int>>& ans, vector<double>& autovals, int gamma, vector<vector<bool>>& partition, int i, ostream& debug = cout); // i = -1: sin particiones
 void acum_metrics(int t_pos[10], int f_pos[10], int f_neg[10], unsigned int& acertados, int guess, int label);
 void gen_metrics(int t_pos[10], int f_pos[10], int f_neg[10] , unsigned int p_acertados, unsigned int p_total, ostream& main_out, ostream& secondary_out = cout);
 
@@ -126,6 +127,8 @@ int main(int argc, char * argv[]){
 	// Archivo de salida para hit-rate y otras metricas 
 	string metricas_s (outputPath);
 	metricas_s.append(".mtx");
+	string vmetricas_s(outputPath);
+	vmetricas_s.append(".vmtx");
 
 	string train_s;
 	string test_s;
@@ -162,11 +165,11 @@ int main(int argc, char * argv[]){
 		vector<vector<bool>> nil (1, vector<bool>(1, false));
 		vector<double> PCA_evals;
 		PCA_evals.reserve(alpha);
-		vector<vector<double> > PCA_evec = fullPCA(Train, PCA_evals, alpha, nil, -1);
+		vector<vector<double> > PCA_evec = fullPCA(Train, PCA_evals, alpha, nil, -1, debug);
 		// Autovalores de PLS-DA
 		vector<double> PLS_evals;
 		PLS_evals.reserve(gamma);
-		vector<vector<double> > PLS_evec = fullPLS(Train, PLS_evals, gamma, nil, -1);
+		vector<vector<double> > PLS_evec = fullPLS(Train, PLS_evals, gamma, nil, -1, debug);
 		// Escritura Autovalores en output
 		for (int i = 0; i < alpha; ++i){
 			output << PCA_evals[i] << endl;
@@ -206,6 +209,8 @@ int main(int argc, char * argv[]){
 	} else { // Tests provienen de particionar train.csv
 		ofstream metricas;
 		metricas.open(metricas_s);
+		ofstream vmetricas;
+		vmetricas.open(vmetricas_s);
 
 		int acertados_tot = 0, total_tot = 0;
 		// Levanto partition
@@ -233,11 +238,11 @@ int main(int argc, char * argv[]){
 			// PCA
 			vector<double> PCA_evals;
 			PCA_evals.reserve(alpha);
-			vector<vector<double> > PCA_evec = fullPCA(Train, PCA_evals, alpha, partitions, i);
+			vector<vector<double> > PCA_evec = fullPCA(Train, PCA_evals, alpha, partitions, i, debug);
 			// PLS-DA
 			vector<double> PLS_evals;
 			PLS_evals.reserve(gamma);
-			vector<vector<double> > PLS_evec = fullPLS(Train, PLS_evals, gamma, partitions, i);
+			vector<vector<double> > PLS_evec = fullPLS(Train, PLS_evals, gamma, partitions, i, debug);
 			// Escritura Autovalores en output
 			for (int j = 0; j < alpha; ++j){
 				output << PCA_evals[j] << endl;
@@ -278,10 +283,11 @@ int main(int argc, char * argv[]){
 				}
 			}
 			// genera y escribe metricas
-			gen_metrics(t_pos, f_pos, f_neg, p_acertados, p_total, metricas);
+			gen_metrics(t_pos, f_pos, f_neg, p_acertados, p_total, metricas, vmetricas);
 		}
 		output.close();
 		metricas.close();
+		vmetricas.close();
 	}
 
 	debug.close();
@@ -475,11 +481,15 @@ vector<vector<double> > PCA_M_K(vector<vector<double> > X_K){
 	M = multiply(trasponer(X_K), X_K);
 	// Dividir matriz por escalar
 	int n = X_K.size() - 1;
+	inplace_matrix_div_by_scalar(M, n);
+	
+	/*
 	for (unsigned int j = 0; j < (M[0]).size(); j++){
 		for (unsigned int i = 0; i < M.size(); i++){
 			M[i][j] /= (double) n;
 		}
 	}
+	*/
 	return M;
 }
 vector<vector<double>> toX(vector<vector<int>>& ans, int db_size){
@@ -515,7 +525,6 @@ vector<vector<double>> toX(vector<vector<int>>& ans, int db_size){
 }
 
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y){
-	cout << "Multiply"; 
     int m = x.size();
     int n = x[0].size();
     int r = y[0].size();
@@ -542,7 +551,6 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
         }
     }
 
-	cout << endl;
 
     return ans;
 
@@ -560,10 +568,8 @@ vector<vector<double>> characteristic_transformation(vector<vector<double>> eige
 			dimages[i][j] = (double) images[i][j];
 		}
 	}
-	cout << "Antes del multiply" << endl;
 	vector<vector<double>> ans (m, vector<double> (alpha, 0));
 	ans = multiply(dimages, trasponer(eigenvectors));
-	cout << "despues del multiply" << endl;
 	/*
 	for(int i = 0; i < n; i++){
 		for(int j = 0; j < alpha; j++){
@@ -862,7 +868,7 @@ vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, i
 		vector<vector<double>> aux = multiply(trasponer(x), y);
 		vector<vector<double>> m_i = multiply(aux,trasponer(aux));
 		//vector<vector<double>> m_i = multiply(x, multiply(trasponer(y), multiply(y, trasponer(x))));
-		w[i] = pIteration(m_i, 2000, eigenvalue);
+		w[i] = pIteration(m_i, 2000, eigenvalue, debug);
 		autovals[i] = eigenvalue;
 		// no vuelve normalizado de pIteration???
 		normalizar(w[i]);
@@ -1080,24 +1086,36 @@ void inplace_matrix_mult_by_scalar(vector<vector<double> >& M, double scalar){
     }
 }
 
+void inplace_matrix_div_by_scalar(vector<vector<double> >& M, double scalar){
+    int m = M.size();
+    int n = (M[0]).size();
+
+    int i, j;
+    for (i = 0; i < m; ++i){
+        for (j = 0; j < n; ++j){
+            M[i][j] /= scalar;
+        }
+    }
+}
+
 //vector<vector<double>> fullPCA(vector<vector<int>>& ans, vector<vector<bool>>& partition, int i, vector<double> autovals, vector<vector<int>> train, vector<vector<int>> test, int alpha){
-vector<vector<double>> fullPCA(vector<vector<int>>& ans, vector<double>& autovals, int alpha, vector<vector<bool>>& partition, int i){
+vector<vector<double>> fullPCA(vector<vector<int>>& ans, vector<double>& autovals, int alpha, vector<vector<bool>>& partition, int i, ostream& debug){
 
 	if (i != -1){ 
 		vector<vector<double>> x = toX_K(ans, i, partition); 
 		vector<vector<double>> M = PCA_M_K(x); 
-		vector<vector<double>> eigenvectors = deflate(M, alpha, autovals);
+		vector<vector<double>> eigenvectors = deflate(M, alpha, autovals, debug);
 		return eigenvectors;
 	} else {
 		vector<vector<double>> x = toX(ans);
 		vector<vector<double>> M = PCA_M_K(x);
-		vector<vector<double>> eigenvectors = deflate(M, alpha, autovals);
+		vector<vector<double>> eigenvectors = deflate(M, alpha, autovals, debug);
 		return eigenvectors;
 	}
 
 }
 
-vector<vector<double>> fullPLS(vector<vector<int>>& ans, vector<double>& autovals, int gamma, vector<vector<bool>>& partition, int i){
+vector<vector<double>> fullPLS(vector<vector<int>>& ans, vector<double>& autovals, int gamma, vector<vector<bool>>& partition, int i, ostream& debug){
 	if (i != -1){
 		vector<vector<double>> X = toX_K(ans, i, partition);
 		double factor = 1.0 / (sqrt(X.size()));
@@ -1106,7 +1124,7 @@ vector<vector<double>> fullPLS(vector<vector<int>>& ans, vector<double>& autoval
 		vector<vector<double>> Y = preY_K(ans, i, partition);
 		toY(Y);
 
-		vector<vector<double>> Ws = pls(X, Y, gamma, autovals);
+		vector<vector<double>> Ws = pls(X, Y, gamma, autovals, debug);
 		return Ws;
 	} else {
 		vector<vector<double>> X = toX(ans);
@@ -1116,7 +1134,7 @@ vector<vector<double>> fullPLS(vector<vector<int>>& ans, vector<double>& autoval
 		vector<vector<double>> Y = preY_K(ans, i, partition);
 		toY(Y);
 
-		vector<vector<double>> Ws = pls(X, Y, gamma, autovals);
+		vector<vector<double>> Ws = pls(X, Y, gamma, autovals, debug);
 		return Ws;
 	}
 }

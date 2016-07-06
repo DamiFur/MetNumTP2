@@ -577,7 +577,7 @@ vector<vector<double>> characteristic_transformation(vector<vector<double>> eige
 
 #define cuad(x) ((x)*(x))
 template<typename T>
-double distancia(const vector<T>& v1, const vector<T>& v2) {
+int distancia(const vector<T>& v1, const vector<T>& v2) {
 	// en v1[0] esta el label asi que hay que comparar v1[i+1] con v2[i]
         double ret = 0.0;
         // Compara los tamaños - 
@@ -593,13 +593,12 @@ double distancia(const vector<T>& v1, const vector<T>& v2) {
                         ret += cuad((double)(v1[i]) - (double)(v2[i]));
                 }
         }
-        return sqrt(ret);
-
+        return ret;
 }
 
 template<typename T>
 int knn(const vector<vector<T>>& train, const vector<T>& adivinar, int k) {
-	multiset<pair<double, int>> dist_index;
+	multiset<pair<int, int>> dist_index;
 
 	for (int i = 0; i<train.size(); ++i) {
 		dist_index.insert(make_pair(distancia(train[i], adivinar), train[i][0]));
@@ -620,7 +619,17 @@ int knn(const vector<vector<T>>& train, const vector<T>& adivinar, int k) {
 	for (int i = 1; i<10; ++i) {
 		if (votos[i] > votos[ganador]) {
 			ganador = i;
-		}
+		} else if (votos[i] == votos[ganador]) {
+            // me fijo el que tenga el voto mas cercano
+            for (const auto& v : dist_index) {
+                if (v.second == i) {
+                    ganador = i;
+                    break;
+                } else if (v.second == ganador) {
+                    break;
+                }
+            }
+        }
 	}
 	return ganador;
 }

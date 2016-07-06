@@ -4,85 +4,166 @@
 
 Primero, experimentamos utilizando los tests provistos por la catedra (test1.in y test2.in) con los valores que ya ten\'ia para ver que resultado obtenemos.
 
+\subsubsection{Experimentaci\'on con test1}
+
+Primero, experimentamos con el archivo tal cual fue provisto por la catedra:
+
 \begin{table}[H]
 \centering
 \begin{tabular}{| l | c | c | c | c | c |}
 \hline
-\#N\'umero de partici\'on & precision & recall & f1-score & tiempo en nanosegundos & tiempo en minutos \\
+N\'umero de partici\'on & precision & recall & f1-score & tiempo en minutos \\
 \hline
 
-0 & 0.966017 & 0.96505 & 0.965309 & 321379808901 & 5.35 \\
-1 & 0.972961 & 0.971499 & 0.972077 & 314427110608 & 5.24 \\
-2 & 0.966673 & 0.965729 & 0.965946 & 313701417004 & 5.22 \\
-3 & 0.968304 & 0.967631 & 0.967826 & 315968779893 & 5.26 \\
-4 & 0.964213 & 0.963188 & 0.96337 & 300517782527 & 5 \\
-5 & 0.967247 & 0.966019 & 0.96635 & 300517782527 & 5 \\
-6 & 0.966298 & 0.965881 & 0.965841 & 303090224951 & 5.05 \\
-7 & 0.973695 & 0.972808 & 0.973107 & 318840910396 & 5.31 \\
-8 & 0.970612 & 0.969215 & 0.969717 & 319504538983 & 5.32 \\
-9 & 0.966593 & 0.966049 & 0.966168 & 324889276456 & 5.31 \\
+0 & 0.968306 & 0.967428 & 0.967672 & 5 \\
+1 & 0.972546 & 0.971092 & 0.971666 & 5 \\
+2 & 0.967754 & 0.966805 & 0.967054 & 5 \\
+3 & 0.969186 & 0.968603 & 0.968779 & 5 \\
+4 & 0.964399 & 0.963591 & 0.963692 & 5 \\
+5 & 0.968841 & 0.967744 & 0.968078 & 5 \\
+6 & 0.968534 & 0.968088 & 0.968098 & 5 \\
+7 & 0.975505 & 0.974413 & 0.974799 & 5 \\
+8 & 0.972179 & 0.970912 & 0.971412 & 5 \\
+9 & 0.968099 & 0.967568 & 0.967727 & 5 \\
 
 \hline
 \end{tabular}
-\caption{Experimentaci\'on kNN con test1 provisto por la catedra (k=5) [RECALCULAR]}
+\caption{Experimentaci\'on kNN con $k=5$}
 \end{table}
 
-Probamos aumentar un poco el k, probando con 10, y notamos que no variaba el resultado mucho para la partici\'on 0 y 1:
+Luego probamos aumentar un poco el $k$, llegando a 10, y notamos que para las tres primeras particiones no variaba mucho el resultado y daba un poco menos:
 
 \begin{table}[H]
 \centering
 \begin{tabular}{| l | c | c | c | c | c |}
 \hline
-\#N\'umero de partici\'on & precision & recall & f1-score & tiempo en nanosegundos & tiempo en minutos \\
+N\'umero de partici\'on & precision & recall & f1-score & tiempo en minutos \\
 \hline
 
-0 & 0.962636 & 0.961219 & 0.961529 & 5.21 \\
-1 & 0.969448 & 0.967396 & 0.968159 & 5.28 \\
+0 & 0.966002 & 0.964818 & 0.965094 & 5 \\
+1 & 0.968972 & 0.967024 & 0.967752 & 5 \\
+2 & 0.967238 & 0.965855 & 0.966201 & 5 \\
 
 \hline
 \end{tabular}
-\caption{Experimentaci\'on kNN con test1 provisto por la catedra (k=10) [RECALCULAR]}
+\caption{Experimentaci\'on kNN con $k=10$}
 \end{table}
 
-Por esa raz\'on, interrumpimos el experimento y decidimos probar con un k mas grande como 100 a ver que sucede.
+Decidimos luego probar con un $k$ que sea mas grande en orden de magnitud, y elegimos 100.  Los resultados con los metodos de medici\'on usados bajaron mas (si bien siguen siendo variaciones del orden de $0.0x$):
 
 \begin{table}[H]
 \centering
 \begin{tabular}{| l | c | c | c | c | c |}
 \hline
-\#N\'umero de partici\'on & precision & recall & f1-score & tiempo en nanosegundos & tiempo en minutos \\
+N\'umero de partici\'on & precision & recall & f1-score & tiempo en minutos \\
 \hline
 
-0 & 0.935468 & 0.929896 & 0.930686 & 311053330564 & 5.18 \\
-1 & 0.946788 & 0.94221 & 0.943543 & 309008982662 & 5.15 \\
-2 & 0.937593 & 0.931579 & 0.93277 & 337781948285 & 5.62 \\
-3 & 0.936482 & 0.931388 & 0.932308 & 327821464099 & 5.46 \\
-4 & 0.93057 & 0.926095 & 0.926405 & 331649940167 & 5.52 \\
-5 & 0.936951 & 0.931295 & 0.932383 & 320494572987 & 5.34 \\
-6 & 0.936962 & 0.931634 & 0.932728 & 318932028505 & 5.31 \\
-7 & 0.943187 & 0.936894 & 0.938434 & 308167318375 & 5.13 \\
-8 & 0.934357 & 0.9274 & 0.929423 & 305957128099 & 5.10 \\
-9 & 0.934152 & 0.929181 & 0.930415 & 306819006107 & 5.11 \\
+0 & 0.935468 & 0.929896 & 0.930686 & 5 \\
+1 & 0.946788 & 0.94221 & 0.943543 & 5 \\
+2 & 0.937593 & 0.931579 & 0.93277 & 5 \\
+3 & 0.936482 & 0.931388 & 0.932308 & 5 \\
+4 & 0.93057 & 0.926095 & 0.926405 & 5 \\
+5 & 0.936951 & 0.931295 & 0.932383 & 5 \\
+6 & 0.936962 & 0.931634 & 0.932728 & 5 \\
+7 & 0.943187 & 0.936894 & 0.938434 & 5 \\
+8 & 0.934357 & 0.9274 & 0.929423 & 5 \\
+9 & 0.934152 & 0.929181 & 0.930415 & 5 \\
 
 \hline
 \end{tabular}
-\caption{Experimentaci\'on kNN con test1 provisto por la catedra (k=100)}
+\caption{Experimentaci\'on kNN con $k=100$}
 \end{table}
 
+Con estos resultados, nos llevan a pensar que con $k$ mas grandes que el 5 estamos obteniendo resultados peores, asi que veremos que sucede con $k$ mas chicos. En las siguientes tablas, mostramos en las primeras 3 particiones que ocurre en este caso:
+
 \begin{table}[H]
 \centering
 \begin{tabular}{| l | c | c | c | c | c |}
 \hline
-\#N\'umero de partici\'on & precision & recall & f1-score & tiempo en nanosegundos & tiempo en minutos \\
+N\'umero de partici\'on & precision & recall & f1-score & tiempo en minutos \\
 \hline
 
-0 & 0.969592 & 0.968373 & 0.968838 & 599496056343 & 9.99 \\
-1 & 0.965361 & 0.964633 & 0.964736 & 584128017663 & 9.73 \\
-2 & 0.965809 & 0.964929 & 0.96514 & 579415970721 & 9.65 \\
-3 & 0.965984 & 0.964777 & 0.965126 & 551468697663 & 9.19 \\
-4 & 0.968909 & 0.967957 & 0.968287 & 572571771131 & 9.54 \\
+0 & 0.970793 & 0.970082 & 0.970253 & 5 \\
+1 & 0.974946 & 0.973822 & 0.974283 & 4 \\
+2 & 0.968389 & 0.967444 & 0.967707 & 5 \\
 
 \hline
 \end{tabular}
-\caption{Experimentaci\'on kNN con test2 provisto por la catedra (k=3) [RECALCULAR]}
+\caption{Experimentaci\'on kNN con $k=4$}
+\end{table}
+
+Vemos una mejora con respecto a $k=5$, que en la tercer partici\'on es pequen\~na pero en el resto es un poco mejor.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{| l | c | c | c | c | c |}
+\hline
+N\'umero de partici\'on & precision & recall & f1-score & tiempo en minutos \\
+\hline
+
+0 & 0.969364 & 0.968575 & 0.968781 & 5 \\
+1 & 0.9753 & 0.974382 & 0.974759 & 5 \\
+2 & 0.968136 & 0.96754 & 0.967641 & 5 \\
+
+\hline
+\end{tabular}
+\caption{Experimentaci\'on kNN con $k=3$}
+\end{table}
+
+Si comparamos con $k=4$, podemos decir que en general es similar salvo la primera partici\'on que da un poco menos.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{| l | c | c | c | c | c |}
+\hline
+N\'umero de partici\'on & precision & recall & f1-score & tiempo en minutos \\
+\hline
+
+0 & 0.967597 & 0.967088 & 0.967186 & 5 \\
+1 & 0.969326 & 0.968344 & 0.968751 & 5 \\
+2 & 0.967231 & 0.966429 & 0.966642 & 5 \\
+
+\hline
+\end{tabular}
+\caption{Experimentaci\'on kNN con $k=2$}
+\end{table}
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{| l | c | c | c | c | c |}
+\hline
+N\'umero de partici\'on & precision & recall & f1-score & tiempo en minutos \\
+\hline
+
+0 & 0.967597 & 0.967088 & 0.967186 & 5 \\
+1 & 0.969326 & 0.968344,0.968751 & 5 \\
+2 & 0.967231 & 0.966429,0.966642 & 5 \\
+
+\hline
+\end{tabular}
+\caption{Experimentaci\'on kNN con $k=1$}
+\end{table}
+
+
+\subsubsection{Experimentaci\'on con test2}
+
+Al igual que el otro test, comenzamos con el k tal cual fue provisto por la catedra con $k = 3$:
+\begin{table}[H]
+\centering
+\begin{tabular}{| l | c | c | c | c | c |}
+\hline
+N\'umero de partici\'on & precision & recall & f1-score & tiempo en minutos \\
+\hline
+
+0 & 0.971022 & 0.969965 & 0.970386 & 9 \\
+1 & 0.966954 & 0.966284 & 0.966407 & 9 \\
+2 & 0.966228 & 0.965548 & 0.965694 & 9 \\
+3 & 0.968304 & 0.967198 & 0.967568 & 9 \\
+4 & 0.96997 & 0.969218 & 0.969475 & 9 \\
+
+\hline
+\end{tabular}
+\caption{Experimentaci\'on kNN con $k=3$}
+
 \end{table}

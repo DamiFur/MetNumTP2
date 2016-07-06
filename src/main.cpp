@@ -754,21 +754,12 @@ vector<double> pIteration(vector<vector<double> > &A, int n, double &e, ostream&
 	// Inicializa autovalor para comparar
 
 	e0 = norm(v);
-//	e0 = prod(v, mult(A,v));
-//	e0 /= productoInterno(v,v);
-
-	// Itera
 	
     for(int i=0, j=0;i < n && j < 300;i++){ // Al menos 300 iteraciones
         v = mult(A, v);
         e = norm(v);
         for (int l = 0; l < v.size(); ++l)
         	v[l] /= e;
-        //normalizar(c);
-        //v = c; // Autovector en esta iteracion;
-
-		/*e = prod(v, mult(A,v)); 
-		e /= productoInterno(v,v); // Autovalor en esta iteracion*/
 
 		d = abs(e - e0);
 		if (d  > d0){ // resetea el contador de corte
@@ -787,11 +778,6 @@ vector<double> pIteration(vector<vector<double> > &A, int n, double &e, ostream&
             v[k]=0;
     }
 
-	// No hace falta, lo calcula en cada iteracion
-    //e = prod(v, mult(A,v));
-    //e /= productoInterno(v, v);
-
-	//debug << i << " iteraciones" << endl;
     return v;
 }
 

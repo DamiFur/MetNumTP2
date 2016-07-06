@@ -252,12 +252,18 @@ int main(int argc, char * argv[]){
 				PLS_evals.reserve(gamma);
 				PLS_evec = fullPLS(Train, PLS_evals, gamma, partitions, i, debug);
 				// Escritura Autovalores en output
+
+				auto t0 = Clock::now();
 				for (int j = 0; j < alpha; ++j){
-					output << PCA_evals[j] << endl;
-				} 
-				for (int j = 0; j < gamma; ++j){ 
-					output << PLS_evals[j] << endl; 
+					output << std::scientific << PCA_evals[j] << endl;
 				}
+				auto t1 = Clock::now();
+				for (int j = 0; j < gamma; ++j){ 
+					output << std::scientific << PLS_evals[j] << endl; 
+				}
+				auto t2 = Clock::now();
+
+				cout << "PCA tardo: " << (t1-t0).count() << ", PLS tardo: " << (t2-t1).count() << endl;
 			}
 			// mantengo output abierto para siguiente iteracion
 
@@ -578,7 +584,7 @@ vector<vector<double>> characteristic_transformation(vector<vector<double>> eige
 
 #define cuad(x) ((x)*(x))
 template<typename T>
-int distancia(const vector<T>& v1, const vector<T>& v2) {
+double distancia(const vector<T>& v1, const vector<T>& v2) {
 	// en v1[0] esta el label asi que hay que comparar v1[i+1] con v2[i]
         double ret = 0.0;
         // Compara los tamaños - 
@@ -599,7 +605,7 @@ int distancia(const vector<T>& v1, const vector<T>& v2) {
 
 template<typename T>
 int knn(const vector<vector<T>>& train, const vector<T>& adivinar, int k) {
-	multiset<pair<int, int>> dist_index;
+	multiset<pair<double, int>> dist_index;
 
 	for (int i = 0; i<train.size(); ++i) {
 		dist_index.insert(make_pair(distancia(train[i], adivinar), train[i][0]));
@@ -748,8 +754,9 @@ vector<double> pIteration(vector<vector<double> > &A, int n, double &e, ostream&
 		v.push_back((double)(rand() % 1009));
     }
 	// Inicializa autovalor para comparar
-	double e0 = norm(v);
-    for(int i=0, j=0;i < n && j<350 ;i++){ // Al menos 300 iteraciones
+	e = norm(v);
+    for(int j=0;n > 0 && j<350 ;n--){ // Al menos 350 iteraciones
+    	double e0 = e; // Setea autovalor de la anterior iteracion
         v = mult(A, v);
         e = norm(v);
         for (int l = 0; l < v.size(); ++l)
@@ -1052,7 +1059,7 @@ vector<vector<double>> fullPLS(vector<vector<int>>& ans, vector<double>& autoval
 	if (i != -1){
 		vector<vector<double>> X = toX_K(ans, i, partition);
 		
-		inplace_matrix_div_by_scalar(X,sqrt(X.size()));
+		inplace_matrix_div_by_scalar(X,sqrt(X.size()-1));
 
 		vector<vector<double>> Y = preY_K(ans, i, partition);
 		toY(Y);
@@ -1062,7 +1069,7 @@ vector<vector<double>> fullPLS(vector<vector<int>>& ans, vector<double>& autoval
 	} else {
 		vector<vector<double>> X = toX(ans);
 
-		inplace_matrix_div_by_scalar(X,sqrt(X.size()));
+		inplace_matrix_div_by_scalar(X,sqrt(X.size()-1));
 
 		vector<vector<double>> Y = preY_K(ans, i, partition);
 		toY(Y);

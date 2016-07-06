@@ -753,18 +753,22 @@ vector<double> pIteration(vector<vector<double> > &A, int n, double &e, ostream&
 	
 	// Inicializa autovalor para comparar
 
-	e0 = prod(v, mult(A,v));
-	e0 /= productoInterno(v,v);
+	e0 = norm(v);
+//	e0 = prod(v, mult(A,v));
+//	e0 /= productoInterno(v,v);
 
 	// Itera
-	int i=0, j=0;
-    while(i < n && j < 300){ // Al menos 300 iteraciones
-        vector<double> c = mult(A, v);
-        normalizar(c);
-        v = c; // Autovector en esta iteracion;
+	
+    for(int i=0, j=0;i < n && j < 300;i++){ // Al menos 300 iteraciones
+        v = mult(A, v);
+        e = norm(v);
+        for (int l = 0; l < v.size(); ++l)
+        	v[l] /= e;
+        //normalizar(c);
+        //v = c; // Autovector en esta iteracion;
 
-		e = prod(v, mult(A,v)); 
-		e /= productoInterno(v,v); // Autovalor en esta iteracion
+		/*e = prod(v, mult(A,v)); 
+		e /= productoInterno(v,v); // Autovalor en esta iteracion*/
 
 		d = abs(e - e0);
 		if (d  > d0){ // resetea el contador de corte
@@ -774,8 +778,7 @@ vector<double> pIteration(vector<vector<double> > &A, int n, double &e, ostream&
 		}
 		d0 = d; // Setea distancia minima para siguiente iteracion
 		e0 = e; // Setea autovalor de referencia para siguiente iteracion
-		
-        ++i;
+
     }
 
 	// Trunca errores despreciables en las componentes del autovector
@@ -788,7 +791,7 @@ vector<double> pIteration(vector<vector<double> > &A, int n, double &e, ostream&
     //e = prod(v, mult(A,v));
     //e /= productoInterno(v, v);
 
-	debug << i << " iteraciones" << endl;
+	//debug << i << " iteraciones" << endl;
     return v;
 }
 
@@ -829,15 +832,18 @@ vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, i
 		w[i] = pIteration(m_i, 2000, eigenvalue);
 		autovals[i] = eigenvalue;
 		// no vuelve normalizado de pIteration???
-		normalizar(w[i]);
+		//normalizar(w[i]);
 		vector<double> t_i = mult(x, w[i]);
 		normalizar(t_i);
 		vector<double> ttx = tmult(t_i, x);
 		vector<vector<double> > xt = vectorMult(t_i, ttx);
 		matSub(x, xt);
-		vector<double> tty  = tmult(t_i, y);
-		vector<vector<double> > ty  = vectorMult(t_i, tty);
-		matSub(y, ty);
+		//vector<double> tty  = tmult(t_i, y);
+		//vector<vector<double> > ty  = vectorMult(t_i, tty);
+		//matSub(y, ty);
+		ttx  = tmult(t_i, y);
+		xt  = vectorMult(t_i, ttx);
+		matSub(y, xt);
 
 	}
 	debug << "salgo del pls" << endl;

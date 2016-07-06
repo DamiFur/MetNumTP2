@@ -188,6 +188,7 @@ int main(int argc, char * argv[]){
 			vector<vector<double>> tcpca_train = characteristic_transformation(PCA_evec, trainImg);
 			vector<vector<double>> tcpca_test = characteristic_transformation(PCA_evec, Test);
 			vector<vector<double>> train_labeled = labelImg(tcpca_train, Train, alpha);
+			//vector<vector<double>> testLabeled = labelImg(tcpca_test, Test, alpha);
 			for (unsigned int i = 0; i < Test.size(); ++i){
 				kaggle << i+1 << "," << knn(train_labeled, tcpca_test[i], kappa) << endl;
 			}
@@ -196,6 +197,7 @@ int main(int argc, char * argv[]){
 			vector<vector<double>> tcpls_train = characteristic_transformation(PLS_evec, trainImg);
 			vector<vector<double>> tcpls_test = characteristic_transformation(PLS_evec, Test);
 			vector<vector<double>> train_labeled = labelImg(tcpls_train, Train, gamma);
+			//vector<vector<double>> testLabeled = labelImg(tcpls_test, Test, gamma);
 			for (unsigned int i = 0; i < Test.size(); ++i){
 				kaggle << i+1 << "," << knn(train_labeled, tcpls_test[i], kappa) << endl;
 			}
@@ -258,9 +260,9 @@ int main(int argc, char * argv[]){
 				vector<vector<double>> tcpca_train = characteristic_transformation(PCA_evec, trainImg);
 				vector<vector<double>> tcpca_test = characteristic_transformation(PCA_evec, testImg);
 				vector<vector<double>> train_labeled = labelImg(tcpca_train, Train_i, alpha);
-				//vector<vector<double>> test_labeled = labelImg(tcpca_test, Test_i, alpha); // No hace falta
+				vector<vector<double>> test_labeled = labelImg(tcpca_test, Test_i, alpha); // No hace falta
 				for (p_total = 0; p_total < Test_i.size(); ++p_total){
-					int guess = knn(train_labeled, tcpca_test[p_total], kappa);
+					int guess = knn(train_labeled, test_labeled[p_total], kappa);
 					acum_metrics(t_pos, f_pos, f_neg, p_acertados, guess, Test_i[p_total][0]);
 				}
 			} else if (metodo == 2){
@@ -268,9 +270,10 @@ int main(int argc, char * argv[]){
 				vector<vector<int>> testImg = toImageVector(Test_i);
 				vector<vector<double>> tcpls_train = characteristic_transformation(PLS_evec, trainImg);
 				vector<vector<double>> tcpls_test = characteristic_transformation(PLS_evec, testImg);
-				vector<vector<double>> train_labeled = labelImg(tcpls_train, Train, gamma);
+				vector<vector<double>> train_labeled = labelImg(tcpls_train, Train_i, gamma);
+				vector<vector<double>> test_labeled = labelImg(tcpls_test, Test_i, gamma);
 				for (p_total = 0; p_total < Test_i.size(); ++p_total){
-					int guess = knn(train_labeled, tcpls_test[p_total], kappa);
+					int guess = knn(train_labeled, test_labeled[p_total], kappa);
 					acum_metrics(t_pos, f_pos, f_neg, p_acertados, guess, Test_i[p_total][0]);
 				}
 			}
@@ -746,6 +749,37 @@ vector<double> pIteration(vector<vector<double> > &A, int n, double &e, ostream&
     for (unsigned int i = 0; i < A.size(); ++i){
 		v.push_back((double)(rand() % 1009));
     }
+	// Inicializa autovalor para comparar
+	//double e0 = norm(v);
+	//int j=0;
+    for(int i=0;i < n;i++){ // Al menos 300 iteraciones
+        v = mult(A, v);
+        //e = prod(v, mult(A,v));
+ 		//e /= productoInterno(v,v);
+        e = norm(v);
+        for (int l = 0; l < v.size(); ++l)
+        	v[l] /= e;
+
+        //normalizar(v);
+
+		//double d = e - e0;
+		//if (d<0.000000001 && d>-0.000000001) // resetea el contador de corte
+		//	j++;
+		//else // incrementa el contador de corte
+	//		j=0;
+	//	e0 = e; // Setea autovalor de referencia para siguiente iteracion
+    }
+    return v;
+}
+
+/*vector<double> pIteration(vector<vector<double> > &A, int n, double &e, ostream& debug){
+	// Declara e inicializa autovector de salida
+    vector<double> v;
+    v.reserve(A.size());
+    srand (time(NULL));
+    for (unsigned int i = 0; i < A.size(); ++i){
+		v.push_back((double)(rand() % 1009));
+    }
 
 	double e0; // Autovalor
 	double d0 = 1000; // Distancia
@@ -753,13 +787,18 @@ vector<double> pIteration(vector<vector<double> > &A, int n, double &e, ostream&
 	
 	// Inicializa autovalor para comparar
 
-	e0 = norm(v);
-	
-    for(int i=0, j=0;i < n && j < 300;i++){ // Al menos 300 iteraciones
-        v = mult(A, v);
-        e = norm(v);
-        for (int l = 0; l < v.size(); ++l)
-        	v[l] /= e;
+	e0 = prod(v, mult(A,v));
+	e0 /= productoInterno(v,v);
+
+	// Itera
+	int i=0, j=0;
+    while(i < n && j < 300){ // Al menos 300 iteraciones
+        vector<double> c = mult(A, v);
+        normalizar(c);
+        v = c; // Autovector en esta iteracion;
+
+		e = prod(v, mult(A,v)); 
+		e /= productoInterno(v,v); // Autovalor en esta iteracion
 
 		d = abs(e - e0);
 		if (d  > d0){ // resetea el contador de corte
@@ -769,17 +808,23 @@ vector<double> pIteration(vector<vector<double> > &A, int n, double &e, ostream&
 		}
 		d0 = d; // Setea distancia minima para siguiente iteracion
 		e0 = e; // Setea autovalor de referencia para siguiente iteracion
-
+		
+        ++i;
     }
 
 	// Trunca errores despreciables en las componentes del autovector
-    for (unsigned int k = 0; k < v.size(); ++k)  {
+    for (unsigned int k = 0; k < v.size(); ++k)  {d
         if(v[k]<0.000001 && v[k]>(-0.000001))
             v[k]=0;
     }
 
+	// No hace falta, lo calcula en cada iteracion
+    //e = prod(v, mult(A,v));
+    //e /= productoInterno(v, v);
+
+	debug << i << " iteraciones" << endl;
     return v;
-}
+}*/
 
 void multConst(vector<vector<double> > &a, double n){
 	for (unsigned int i = 0; i < a.size(); ++i){
@@ -795,13 +840,15 @@ vector<vector<double> > deflate(vector<vector<double> > &mat, unsigned int alpha
 		double eigenvalue;
 		debug << i << " eigenvalue" << endl;
 		vector<double> autovect = pIteration(mat, 2000, eigenvalue, debug);
-		vector<vector<double> > transp = xxt(autovect);
 		sol.push_back(autovect);
 		autovalores.push_back(eigenvalue);
+		for (int i = 0; i < mat.size(); ++i){
+			for (int j = 0; j < mat.size(); ++j){
+				mat[i][j] -= autovect[i]*autovect[j]*eigenvalue;
+			}
+		}
+		
 		debug << eigenvalue << endl;
-		multConst(transp, eigenvalue);
-		matSub(mat, transp);
-
 	}
 	return sol;
 }
@@ -818,18 +865,18 @@ vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, i
 		w[i] = pIteration(m_i, 2000, eigenvalue);
 		autovals[i] = eigenvalue;
 		// no vuelve normalizado de pIteration???
-		//normalizar(w[i]);
+		normalizar(w[i]);
 		vector<double> t_i = mult(x, w[i]);
 		normalizar(t_i);
 		vector<double> ttx = tmult(t_i, x);
 		vector<vector<double> > xt = vectorMult(t_i, ttx);
 		matSub(x, xt);
-		//vector<double> tty  = tmult(t_i, y);
-		//vector<vector<double> > ty  = vectorMult(t_i, tty);
-		//matSub(y, ty);
-		ttx  = tmult(t_i, y);
-		xt  = vectorMult(t_i, ttx);
-		matSub(y, xt);
+		vector<double> tty  = tmult(t_i, y);
+		vector<vector<double> > ty  = vectorMult(t_i, tty);
+		matSub(y, ty);
+		//ttx  = tmult(t_i, y);
+		//xt  = vectorMult(t_i, ttx);
+		//matSub(y, xt);
 
 	}
 	debug << "salgo del pls" << endl;

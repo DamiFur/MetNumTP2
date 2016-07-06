@@ -24,7 +24,49 @@ Primero, experimentamos utilizando los tests provistos por la catedra (test1.in 
 
 \hline
 \end{tabular}
-\caption{Experimentaci\'on kNN con test1 provisto por la catedra}
+\caption{Experimentaci\'on kNN con test1 provisto por la catedra (k=5) [RECALCULAR]}
+\end{table}
+
+Probamos aumentar un poco el k, probando con 10, y notamos que no variaba el resultado mucho para la partici\'on 0 y 1:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{| l | c | c | c | c | c |}
+\hline
+\#N\'umero de partici\'on & precision & recall & f1-score & tiempo en nanosegundos & tiempo en minutos \\
+\hline
+
+0 & 0.962636 & 0.961219 & 0.961529 & 5.21 \\
+1 & 0.969448 & 0.967396 & 0.968159 & 5.28 \\
+
+\hline
+\end{tabular}
+\caption{Experimentaci\'on kNN con test1 provisto por la catedra (k=10) [RECALCULAR]}
+\end{table}
+
+Por esa raz\'on, interrumpimos el experimento y decidimos probar con un k mas grande como 100 a ver que sucede.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{| l | c | c | c | c | c |}
+\hline
+\#N\'umero de partici\'on & precision & recall & f1-score & tiempo en nanosegundos & tiempo en minutos \\
+\hline
+
+0 & 0.935468 & 0.929896 & 0.930686 & 311053330564 & 5.18 \\
+1 & 0.946788 & 0.94221 & 0.943543 & 309008982662 & 5.15 \\
+2 & 0.937593 & 0.931579 & 0.93277 & 337781948285 & 5.62 \\
+3 & 0.936482 & 0.931388 & 0.932308 & 327821464099 & 5.46 \\
+4 & 0.93057 & 0.926095 & 0.926405 & 331649940167 & 5.52 \\
+5 & 0.936951 & 0.931295 & 0.932383 & 320494572987 & 5.34 \\
+6 & 0.936962 & 0.931634 & 0.932728 & 318932028505 & 5.31 \\
+7 & 0.943187 & 0.936894 & 0.938434 & 308167318375 & 5.13 \\
+8 & 0.934357 & 0.9274 & 0.929423 & 305957128099 & 5.10 \\
+9 & 0.934152 & 0.929181 & 0.930415 & 306819006107 & 5.11 \\
+
+\hline
+\end{tabular}
+\caption{Experimentaci\'on kNN con test1 provisto por la catedra (k=100)}
 \end{table}
 
 \begin{table}[H]
@@ -42,5 +84,5 @@ Primero, experimentamos utilizando los tests provistos por la catedra (test1.in 
 
 \hline
 \end{tabular}
-\caption{Experimentaci\'on kNN con test2 provisto por la catedra}
+\caption{Experimentaci\'on kNN con test2 provisto por la catedra (k=3) [RECALCULAR]}
 \end{table}

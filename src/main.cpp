@@ -590,7 +590,7 @@ vector<vector<double> > toX_K(vector<vector<int>>& original, int K, vector<vecto
 	int count_train= 0;
 	double average[image_size];
 	for (int j = 0; j < image_size; j++){
-		average[j] = 0.0;
+		average[j] = 0;
 	}
 
 	// Las columnas de partition representan las filas de original

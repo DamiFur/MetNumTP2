@@ -37,7 +37,7 @@ vector<vector<double> > deflate(vector<vector<double> > &mat, unsigned int alpha
 //vector<vector<double>> toX(vector<vector<double>>& ans, int K);
 vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<int>> images);
 void trainMatrix(string train, vector<vector<int>>& ans, int K);
-void testMatrix(string test, vector<vector<int>>& ans, int K);
+void testMatrix(string test, vector<vector<int>>& ans);
 vector<vector<double>> toX(vector<vector<int>>& imagenes, int db_size = DB_SIZE);
 vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama, vector<double> &autovals, ostream& debug = cout);
 void toY(vector<vector<double>>& matrix);
@@ -160,7 +160,7 @@ int main(int argc, char * argv[]){
 		vector<vector<int>> Train (db_size, vector<int>(image_size + 1));
 		vector<vector<int>> Test (test_size, vector<int>(image_size));
     	trainMatrix(train_s, Train, db_size);
-		testMatrix(test_s, Test, test_size);
+		testMatrix(test_s, Test);
 		// Autovalores de PCA
 		vector<vector<bool>> nil (1, vector<bool>(1, false));
 		vector<double> PCA_evals;
@@ -332,7 +332,7 @@ void trainMatrix(string train, vector<vector<int>>& ans, int K){
 
 }
 
-void testMatrix(string test, vector<vector<int>>& ans, int i){
+void testMatrix(string test, vector<vector<int>>& ans){
 
     ifstream input;
     input.open(test);
@@ -480,7 +480,7 @@ vector<vector<double> > PCA_M_K(vector<vector<double> > X_K){
 	vector<vector<double> > M;
 	M = multiply(trasponer(X_K), X_K);
 	// Dividir matriz por escalar
-	int n = X_K.size() - 1;
+	double n = (double)X_K.size() - 1;
 	inplace_matrix_div_by_scalar(M, n);
 	
 	/*
@@ -555,6 +555,25 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
     return ans;
 
 }
+/*
+vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<int>> images){
+	int n = images.size(); 	// Cantidad imagenes
+							// images tiene x_i como vectores fila
+	int alpha = eigenvectors.size(); // Dimensiones a considerar
+
+	vector<vector<double>> ans (n, vector<double> (alpha, 0));
+
+	for(int i = 0; i < n; i++){
+		for(int j = 0; j < alpha; j++){
+			for(int a = 0; a < 784; a++){
+				ans[i][j] += images[i][a] * eigenvectors[j][a];
+			}
+		}
+	}
+
+	return ans;
+
+}*/
 
 vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<int>> images){
 	unsigned int m = images.size(); 	// Cantidad imagenes
@@ -570,15 +589,15 @@ vector<vector<double>> characteristic_transformation(vector<vector<double>> eige
 	}
 	vector<vector<double>> ans (m, vector<double> (alpha, 0));
 	ans = multiply(dimages, trasponer(eigenvectors));
-	/*
-	for(int i = 0; i < n; i++){
-		for(int j = 0; j < alpha; j++){
-			for(int a = 0; a < 784; a++){
-				ans[i][j] += images[i][a] * eigenvectors[j][a];
-			}
-		}
-	}
-	*/
+	
+	//for(int i = 0; i < n; i++){
+	//	for(int j = 0; j < alpha; j++){
+	//		for(int a = 0; a < 784; a++){
+	//			ans[i][j] += images[i][a] * eigenvectors[j][a];
+	//		}
+	//	}
+	//}
+	
 
 	return ans;
 
@@ -778,60 +797,6 @@ vector<double> pIteration(vector<vector<double> > &A, int n, double &e, ostream&
     return v;
 }
 
-/*vector<double> pIteration(vector<vector<double> > &A, int n, double &e, ostream& debug){
-	// Declara e inicializa autovector de salida
-    vector<double> v;
-    v.reserve(A.size());
-    srand (time(NULL));
-    for (unsigned int i = 0; i < A.size(); ++i){
-		v.push_back((double)(rand() % 1009));
-    }
-
-	double e0; // Autovalor
-	double d0 = 1000; // Distancia
-	int d; // Distancia
-	
-	// Inicializa autovalor para comparar
-
-	e0 = prod(v, mult(A,v));
-	e0 /= productoInterno(v,v);
-
-	// Itera
-	int i=0, j=0;
-    while(i < n && j < 300){ // Al menos 300 iteraciones
-        vector<double> c = mult(A, v);
-        normalizar(c);
-        v = c; // Autovector en esta iteracion;
-
-		e = prod(v, mult(A,v)); 
-		e /= productoInterno(v,v); // Autovalor en esta iteracion
-
-		d = abs(e - e0);
-		if (d  > d0){ // resetea el contador de corte
-			j = 0;
-		} else if (d < 0.000001){ // incrementa el contador de corte
-			++j;
-		}
-		d0 = d; // Setea distancia minima para siguiente iteracion
-		e0 = e; // Setea autovalor de referencia para siguiente iteracion
-		
-        ++i;
-    }
-
-	// Trunca errores despreciables en las componentes del autovector
-    for (unsigned int k = 0; k < v.size(); ++k)  {d
-        if(v[k]<0.000001 && v[k]>(-0.000001))
-            v[k]=0;
-    }
-
-	// No hace falta, lo calcula en cada iteracion
-    //e = prod(v, mult(A,v));
-    //e /= productoInterno(v, v);
-
-	debug << i << " iteraciones" << endl;
-    return v;
-}*/
-
 void multConst(vector<vector<double> > &a, double n){
 	for (unsigned int i = 0; i < a.size(); ++i){
 		for (unsigned int j = 0; j < a.size(); ++j)
@@ -847,7 +812,7 @@ vector<vector<double> > deflate(vector<vector<double> > &mat, unsigned int alpha
 		debug << i << " eigenvalue" << endl;
 		vector<double> autovect = pIteration(mat, 2000, eigenvalue, debug);
 		sol.push_back(autovect);
-		autovalores.push_back(eigenvalue);
+		autovalores[i] = eigenvalue;
 		for (int i = 0; i < mat.size(); ++i){
 			for (int j = 0; j < mat.size(); ++j){
 				mat[i][j] -= autovect[i]*autovect[j]*eigenvalue;

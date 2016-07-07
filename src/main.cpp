@@ -376,11 +376,12 @@ vector<vector<int>> toImageVector(vector<vector<int>> matrix){
 	unsigned int cantImag = matrix.size();
 	vector<vector<int>> ans (cantImag, vector<int> (image_size));
 
-	for(unsigned int i = 0; i < cantImag; i++){
-		for(int j = 0; j < image_size; j++){
-			ans[i][j] = matrix[i][j + 1];
+	#pragma omp parallel for
+		for(unsigned int i = 0; i < cantImag; i++){
+			for(int j = 0; j < image_size; j++){
+				ans[i][j] = matrix[i][j + 1];
+			}
 		}
-	}
 
 	return ans;
 

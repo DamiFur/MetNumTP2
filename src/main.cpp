@@ -95,11 +95,11 @@ int main(int argc, char * argv[]){
 			db_size = atoi(argv[4]);
 		if (argc > 5)
 			image_size = atoi(argv[5]);
-		cout << "Input: " << inputPath << endl;
-		cout << "Output: " << outputPath << endl;
-		cout << "Metodo: " << metodo << endl;
-		cout << "db_size: " << db_size << endl;
-		cout << "image_size: " << image_size << endl;
+	//	cout << "Input: " << inputPath << endl;
+	//	cout << "Output: " << outputPath << endl;
+	//	cout << "Metodo: " << metodo << endl;
+	//	cout << "db_size: " << db_size << endl;
+	//	cout << "image_size: " << image_size << endl;
 		if (!(metodo == 0 || metodo == 1 || metodo == 2 || metodo == 3 || metodo == 4)) // Metodo 3 = para pruebas - temporal
 			return 1;
 	}
@@ -117,10 +117,15 @@ int main(int argc, char * argv[]){
 	kaggle_s.append(".csv");
 
 	// Archivo de salida para hit-rate y otras metricas 
-	string metricas_s (outputPath);
-	metricas_s.append(".mtx");
-	string vmetricas_s(outputPath);
-	vmetricas_s.append(".vmtx");
+	string metricas_s_PCA (outputPath);
+	metricas_s_PCA.append("_PCA.mtx");
+	string vmetricas_s_PCA(outputPath);
+	vmetricas_s_PCA.append("_PCA.vmtx");
+
+	string metricas_s_PLS (outputPath);
+	metricas_s_PLS.append("_PLS.mtx");
+	string vmetricas_s_PLS(outputPath);
+	vmetricas_s_PLS.append("_PLS.vmtx");
 
 	string train_s;
 	string test_s;
@@ -199,14 +204,18 @@ int main(int argc, char * argv[]){
 		}
 		kaggle.close();
 	} else { // Tests provienen de particionar train.csv
-		ofstream metricas;
-		metricas.open(metricas_s);
-		ofstream vmetricas;
-		vmetricas.open(vmetricas_s);
+		ofstream metricas_PCA;
+		metricas_PCA.open(metricas_s_PCA);
+		ofstream vmetricas_PCA;
+		vmetricas_PCA.open(vmetricas_s_PCA);
+
+		ofstream metricas_PLS;
+		metricas_PLS.open(metricas_s_PLS);
+		ofstream vmetricas_PLS;
+		vmetricas_PLS.open(vmetricas_s_PLS);
 
 		int acertados_tot = 0, total_tot = 0;
 		// Levanto partition
-		cout << "Levantando partition\n";
 		vector<vector<bool>> partitions(crossK, vector<bool>(db_size));
 		for (int i = 0; i < crossK; ++i){
 			for (int j = 0; j < db_size; ++j){
@@ -216,18 +225,18 @@ int main(int argc, char * argv[]){
 			}
 		}
 		input.close();
-		cout << "Partition levantado!\n";
-		// Levanto imagenes
-		cout << "Levantando train\n";
+
 		vector<vector<int>> Train (db_size, vector<int>(image_size + 1));
     	trainMatrix(train_s, Train, db_size);
-    	cout << "Train levantado!\n";
-
+    	cout << "Archivo :" << outputPath << endl;
 		// Itero sobre las particiones
 		for (unsigned int i = 0; i < partitions.size(); ++i){
 			printf("Calculando partition %i\n", i);
 			unsigned int p_acertados = 0, p_total = 0;
 			int t_pos[10] = {0}, f_pos[10] = {0}, f_neg[10] = {0};
+
+			unsigned int p_acertados_pls = 0, p_total_pls = 0;
+			int t_pos_pls[10] = {0}, f_pos_pls[10] = {0}, f_neg_pls[10] = {0};
 			vector<vector<int>> Train_i = filtrarPartition(Train, partitions, i, true);
 			vector<vector<int>> Test_i = filtrarPartition(Train, partitions, i, false);
 
@@ -276,44 +285,48 @@ int main(int argc, char * argv[]){
 				}
 				auto t2 = Clock::now();
 				std::cout << "Tiempo en correr knn: " << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count() << " minutos" << std::endl;
-			} else if (metodo == 1){
+			} else {
 				
 				vector<vector<double>> tcpca_train = characteristic_transformation(PCA_evec, trainImg);
 				vector<vector<double>> tcpca_test = characteristic_transformation(PCA_evec, testImg);
-				vector<vector<double>> train_labeled = labelImg(tcpca_train, Train_i, alpha);
-				vector<vector<double>> test_labeled = labelImg(tcpca_test, Test_i, alpha); // No hace falta
+				vector<vector<double>> pca_train_labeled = labelImg(tcpca_train, Train_i, alpha);
+				vector<vector<double>> pca_test_labeled = labelImg(tcpca_test, Test_i, alpha); // No hace falta
 				auto t0 = Clock::now();
 				for (p_total = 0; p_total < Test_i.size(); ++p_total){
-					int guess = knn(train_labeled, test_labeled[p_total], kappa);
+					int guess = knn(pca_train_labeled, pca_test_labeled[p_total], kappa);
 					acum_metrics(t_pos, f_pos, f_neg, p_acertados, guess, Test_i[p_total][0]);
 				}
 				auto t1 = Clock::now();
-				cout << "kNN tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t1-t0).count() << endl;
-			} else if (metodo == 2){
+				cout << "kNN en PCA tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t1-t0).count() << endl;
+
+				gen_metrics(t_pos, f_pos, f_neg, p_acertados, p_total, metricas_PCA, vmetricas_PCA);
+			
 				vector<vector<double>> tcpls_train = characteristic_transformation(PLS_evec, trainImg);
 				vector<vector<double>> tcpls_test = characteristic_transformation(PLS_evec, testImg);
-				vector<vector<double>> train_labeled = labelImg(tcpls_train, Train_i, gamma);
-				vector<vector<double>> test_labeled = labelImg(tcpls_test, Test_i, gamma);
-				auto t0 = Clock::now();
-				for (p_total = 0; p_total < Test_i.size(); ++p_total){
-					int guess = knn(train_labeled, test_labeled[p_total], kappa);
-					acum_metrics(t_pos, f_pos, f_neg, p_acertados, guess, Test_i[p_total][0]);
+				vector<vector<double>> pls_train_labeled = labelImg(tcpls_train, Train_i, gamma);
+				vector<vector<double>> pls_test_labeled = labelImg(tcpls_test, Test_i, gamma);
+				t0 = Clock::now();
+				for (p_total_pls = 0; p_total_pls < Test_i.size(); ++p_total_pls){
+					int guess = knn(pls_train_labeled, pls_test_labeled[p_total_pls], kappa);
+					acum_metrics(t_pos_pls, f_pos_pls, f_neg_pls, p_acertados_pls, guess, Test_i[p_total_pls][0]);
 				}
-				auto t1 = Clock::now();
-				cout << "kNN tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t1-t0).count() << endl;
+				t1 = Clock::now();
+				cout << "kNN en PLS tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t1-t0).count() << endl;
+
+				gen_metrics(t_pos_pls, f_pos_pls, f_neg_pls, p_acertados_pls, p_total_pls, metricas_PLS, vmetricas_PLS);
 			}
 			// genera y escribe metricas
-			gen_metrics(t_pos, f_pos, f_neg, p_acertados, p_total, metricas, vmetricas);
+			
 		}
 		output.close();
-		metricas.close();
-		vmetricas.close();
+		metricas_PCA.close();
+		vmetricas_PCA.close();
+		metricas_PLS.close();
+		vmetricas_PLS.close();
 	}
 
 	return 0;
-	/*
-	*/
-	
+
 }
 
 

@@ -17,7 +17,6 @@
 
 typedef std::chrono::high_resolution_clock Clock;
 
-
 using namespace std;
 
 //const int db_size = 42000;
@@ -29,22 +28,20 @@ int db_size = DB_SIZE;
 const unsigned int K_DE_KNN = 10;
 unsigned int test_size = TEST_SIZE;
 
-
-void dividirMatriz(vector<vector<double> > &m, double c);
 vector<vector<int>> toImageVector(vector<vector<int>> matrix);
 vector<vector<double>> labelImg(vector<vector<double>> toLabel, vector<vector<int>> labels, int alpha);
-vector<vector<double> > deflate(vector<vector<double> > &mat, unsigned int alpha, vector<double> &autovalores, ostream& debug = std::cout);
+vector<vector<double> > deflate(vector<vector<double> > &mat, unsigned int alpha, vector<double> &autovalores);
 vector<vector<double>> characteristic_transformation(vector<vector<double>> eigenvectors, vector<vector<int>> images);
 void trainMatrix(string train, vector<vector<int>>& ans, int K);
 void testMatrix(string test, vector<vector<int>>& ans);
 vector<vector<double>> toX(vector<vector<int>>& imagenes, int db_size = DB_SIZE);
-vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama, vector<double> &autovals, ostream& debug = cout);
+vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama, vector<double> &autovals);
 void toY(vector<vector<double>>& matrix);
 vector<vector<double>> trasponer(vector<vector<double>> matrix);
 vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>> y);
 vector<vector<double> > toX_K(vector<vector<int>>& original, const unsigned int K, vector<vector<bool>>& partition);
 vector<vector<double> > PCA_M_K(vector<vector<double> > X_K);
-vector<double> pIteration(vector<vector<double> > &a, int n, double &e, ostream& debug = std::cout);
+vector<double> pIteration(vector<vector<double> > &a, int n, double &e);
 void print(vector<vector<int> >& M , ostream& out, const string caption = "<empty caption>", const char sep = ' ');
 void print(vector<vector<double> >& M, ostream& out, const string caption = "<empty caption>", const char sep = ' ');
 void print(int ** M, int m, int n, ostream& out, const string caption = "<empty caption>", const char sep = ' ');
@@ -59,13 +56,11 @@ double recall(int t_pos[], int f_neg[], int size);
 double recall_(int t_pos[], int f_neg[], double rec[], int size);
 double f1_score(double prec, double rec);
 double f1_score_(double prec[], double rec[], double f1[], int size);
-void trainMatrixdouble(string train, vector<vector<double>>& ans, int K, bool conLabels = true);
 vector<vector<double>> preY_K(vector<vector<int>> matrix, int part, vector<vector<bool>> partitions);
-void inplace_matrix_mult_by_scalar(vector<vector<double> >& mat, double scalar);
 void inplace_matrix_div_by_scalar(vector<vector<double> >& M, double scalar);
 
-vector<vector<double>> fullPCA(vector<vector<int>>& ans, vector<double>& autovals, int alpha, vector<vector<bool>>& partition, int i, ostream& debug = cout); // i = -1: sin particiones
-vector<vector<double>> fullPLS(vector<vector<int>>& ans, vector<double>& autovals, int gamma, vector<vector<bool>>& partition, int i, ostream& debug = cout); // i = -1: sin particiones
+vector<vector<double>> fullPCA(vector<vector<int>>& ans, vector<double>& autovals, int alpha, vector<vector<bool>>& partition, int i); // i = -1: sin particiones
+vector<vector<double>> fullPLS(vector<vector<int>>& ans, vector<double>& autovals, int gamma, vector<vector<bool>>& partition, int i); // i = -1: sin particiones
 void acum_metrics(int t_pos[10], int f_pos[10], int f_neg[10], unsigned int& acertados, int guess, int label);
 void gen_metrics(int t_pos[10], int f_pos[10], int f_neg[10] , unsigned int p_acertados, unsigned int p_total, ostream& main_out, ostream& secondary_out = cout);
 
@@ -73,8 +68,6 @@ int main(int argc, char * argv[]){
 
 	string inputPath, outputPath; 
 	int metodo; 
-	ofstream debug;
-	debug.open("debug.out");
 
 	if (argc < 4){ 
 		cout << "Input: ";
@@ -164,11 +157,11 @@ int main(int argc, char * argv[]){
 		vector<vector<bool>> nil (1, vector<bool>(1, false));
 		vector<double> PCA_evals;
 		PCA_evals.reserve(alpha);
-		vector<vector<double> > PCA_evec = fullPCA(Train, PCA_evals, alpha, nil, -1, debug);
+		vector<vector<double> > PCA_evec = fullPCA(Train, PCA_evals, alpha, nil, -1);
 		// Autovalores de PLS-DA
 		vector<double> PLS_evals;
 		PLS_evals.reserve(gamma);
-		vector<vector<double> > PLS_evec = fullPLS(Train, PLS_evals, gamma, nil, -1, debug);
+		vector<vector<double> > PLS_evec = fullPLS(Train, PLS_evals, gamma, nil, -1);
 		// Escritura Autovalores en output
 		for (int i = 0; i < alpha; ++i){
 			output << PCA_evals[i] << endl;
@@ -244,26 +237,32 @@ int main(int argc, char * argv[]){
 			vector<vector<double> > PCA_evec;
 			vector<double> PLS_evals;
 			vector<vector<double> > PLS_evec;
+			vector<vector<int>> trainImg;
+			vector<vector<int>> testImg;
 			if (metodo != 0) {
 				// PCA
-				PCA_evals.reserve(alpha);
-				PCA_evec = fullPCA(Train, PCA_evals, alpha, partitions, i, debug);
-				// PLS-DA
-				PLS_evals.reserve(gamma);
-				PLS_evec = fullPLS(Train, PLS_evals, gamma, partitions, i, debug);
-				// Escritura Autovalores en output
-
 				auto t0 = Clock::now();
+				PCA_evals.reserve(alpha);
+				PCA_evec = fullPCA(Train, PCA_evals, alpha, partitions, i);
+				// PLS-DA
+				auto t1 = Clock::now();
+				PLS_evals.reserve(gamma);
+				PLS_evec = fullPLS(Train, PLS_evals, gamma, partitions, i);
+				// Escritura Autovalores en output
+				auto t2 = Clock::now();
+				
 				for (int j = 0; j < alpha; ++j){
 					output << std::scientific << PCA_evals[j] << endl;
 				}
-				auto t1 = Clock::now();
+				
 				for (int j = 0; j < gamma; ++j){ 
 					output << std::scientific << PLS_evals[j] << endl; 
 				}
-				auto t2 = Clock::now();
-
-				cout << "PCA tardo: " << (t1-t0).count() << ", PLS tardo: " << (t2-t1).count() << endl;
+				
+				cout << "PCA tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t1-t0).count() << ", PLS tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t2-t1).count() << endl;
+				
+				trainImg = toImageVector(Train_i);
+				testImg = toImageVector(Test_i);
 			}
 			// mantengo output abierto para siguiente iteracion
 
@@ -276,29 +275,32 @@ int main(int argc, char * argv[]){
 					acum_metrics(t_pos, f_pos, f_neg, p_acertados, guess, Test_i[p_total][0]);
 				}
 				auto t2 = Clock::now();
-				std::cout << "Tiempo en correr knn: " << std::chrono::duration_cast<std::chrono::minutes>(t2 - t1).count() << " minutos" << std::endl;
+				std::cout << "Tiempo en correr knn: " << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count() << " minutos" << std::endl;
 			} else if (metodo == 1){
-				vector<vector<int>> trainImg = toImageVector(Train_i);
-				vector<vector<int>> testImg = toImageVector(Test_i);
+				
 				vector<vector<double>> tcpca_train = characteristic_transformation(PCA_evec, trainImg);
 				vector<vector<double>> tcpca_test = characteristic_transformation(PCA_evec, testImg);
 				vector<vector<double>> train_labeled = labelImg(tcpca_train, Train_i, alpha);
 				vector<vector<double>> test_labeled = labelImg(tcpca_test, Test_i, alpha); // No hace falta
+				auto t0 = Clock::now();
 				for (p_total = 0; p_total < Test_i.size(); ++p_total){
 					int guess = knn(train_labeled, test_labeled[p_total], kappa);
 					acum_metrics(t_pos, f_pos, f_neg, p_acertados, guess, Test_i[p_total][0]);
 				}
+				auto t1 = Clock::now();
+				cout << "kNN tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t1-t0).count() << endl;
 			} else if (metodo == 2){
-				vector<vector<int>> trainImg = toImageVector(Train_i);
-				vector<vector<int>> testImg = toImageVector(Test_i);
 				vector<vector<double>> tcpls_train = characteristic_transformation(PLS_evec, trainImg);
 				vector<vector<double>> tcpls_test = characteristic_transformation(PLS_evec, testImg);
 				vector<vector<double>> train_labeled = labelImg(tcpls_train, Train_i, gamma);
 				vector<vector<double>> test_labeled = labelImg(tcpls_test, Test_i, gamma);
+				auto t0 = Clock::now();
 				for (p_total = 0; p_total < Test_i.size(); ++p_total){
 					int guess = knn(train_labeled, test_labeled[p_total], kappa);
 					acum_metrics(t_pos, f_pos, f_neg, p_acertados, guess, Test_i[p_total][0]);
 				}
+				auto t1 = Clock::now();
+				cout << "kNN tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t1-t0).count() << endl;
 			}
 			// genera y escribe metricas
 			gen_metrics(t_pos, f_pos, f_neg, p_acertados, p_total, metricas, vmetricas);
@@ -308,7 +310,6 @@ int main(int argc, char * argv[]){
 		vmetricas.close();
 	}
 
-	debug.close();
 	return 0;
 	/*
 	*/
@@ -371,31 +372,6 @@ void testMatrix(string test, vector<vector<int>>& ans){
 
 }
 
-void trainMatrixdouble(string train, vector<vector<double>>& ans, int image_size, bool conLabels){
-
-	ifstream input;
-	input.open(train);
-
-	string row;
-
-	for(int i = 0; getline(input, row); i++){
-		replace(row.begin(), row.end(), ',', ' ');
-		stringstream ss;
-		ss << row;
-		if (conLabels){
-		// Con Labels
-			for(int j = 0; j < image_size + 1; j++){
-				ss >> ans[i][j];
-			}
-		} else {
-			for(int j = 0; j < image_size + 1; j++){
-				ss >> ans[i][j+1];
-			}
-		}		
-	}
-	input.close();
-}
-
 vector<vector<int>> toImageVector(vector<vector<int>> matrix){
 	unsigned int cantImag = matrix.size();
 	vector<vector<int>> ans (cantImag, vector<int> (image_size));
@@ -433,12 +409,12 @@ vector<vector<double>> trasponer(vector<vector<double>> matrix){
 	int m = (matrix[0]).size();
 	int n = matrix.size();
 	vector<vector<double>> ans (m, vector<double> (n, 0));
-
-	for(int i = 0; i < m; i++){
-		for(int j = 0; j < n; j++){
-			ans[i][j] = matrix[j][i];
+	#pragma omp parallel for
+		for(int i = 0; i < m; i++){
+			for(int j = 0; j < n; j++){
+				ans[i][j] = matrix[j][i];
+			}
 		}
-	}
 
 	return ans;
 }
@@ -644,41 +620,25 @@ int knn(const vector<vector<T>>& train, const vector<T>& adivinar, int k) {
 vector<double> tmult(vector<double> &b, vector<vector<double> > &a){
 	vector<double> result (a[0].size(), 0);
 	assert(b.size() == a.size());
-	for (unsigned int i = 0; i < a[0].size(); ++i)
-	{
-		for (unsigned int j = 0; j < b.size(); ++j)
-			result[i] += b[j]*a[j][i];
-	}
+	#pragma omp parallel for
+		for (unsigned int i = 0; i < a[0].size(); ++i)
+		{
+			for (unsigned int j = 0; j < b.size(); ++j)
+				result[i] += b[j]*a[j][i];
+		}
 	return result;
 }
 
 vector<double> mult(vector<vector<double> > &a, vector<double> &b){
 	vector<double> result (a.size(), 0);
 	assert(b.size() == a[0].size());
-	for (unsigned int i = 0; i < a.size(); ++i)
-	{
-		for (unsigned int j = 0; j < b.size(); ++j)
-			result[i] += b[j]*a[i][j];
-	}
+	#pragma omp parallel for
+		for (unsigned int i = 0; i < a.size(); ++i)
+		{
+			for (unsigned int j = 0; j < b.size(); ++j)
+				result[i] += b[j]*a[i][j];
+		}
 	return result;
-}
-
-vector<vector<double> > vectorMult(vector<double> &a, vector<double> &b){
-	vector<vector<double> > sol (a.size(), vector<double> (b.size()));
-	for (unsigned int i = 0; i < a.size(); ++i){
-		for (unsigned int j = 0; j < b.size(); ++j)
-			sol[i][j]= a[i]*b[j];
-	}
-	return sol;
-}
-
-vector<vector<double> > xxt(vector<double> &v){
-	vector<vector<double> > sol (v.size(), vector<double> (v));
-	for (unsigned int i = 0; i < v.size(); ++i){
-		for (unsigned int j = 0; j < v.size(); ++j)
-			sol[i][j]*=v[i];
-	}
-	return sol;
 }
 
 void matSub(vector<vector<double> > &a, vector<vector<double> > &b){
@@ -745,7 +705,7 @@ double prod(std::vector<double> &v1, std::vector<double> v2){
     return sol;
 }
 
-vector<double> pIteration(vector<vector<double> > &A, int n, double &e, ostream& debug){
+vector<double> pIteration(vector<vector<double> > &A, int n, double &e){
 	// Declara e inicializa autovector de salida
     vector<double> v;
     v.reserve(A.size());
@@ -769,7 +729,6 @@ vector<double> pIteration(vector<vector<double> > &A, int n, double &e, ostream&
 			j=0;
 		e0 = e; // Setea autovalor de referencia para siguiente iteracion
     }
-
     return v;
 }
 
@@ -780,30 +739,28 @@ void multConst(vector<vector<double> > &a, double n){
 	}
 }
 
-vector<vector<double> > deflate(vector<vector<double> > &mat, unsigned int alpha, vector<double> &autovalores, ostream& debug){
+vector<vector<double> > deflate(vector<vector<double> > &mat, unsigned int alpha, vector<double> &autovalores){
 	vector<vector<double> > sol ;
 	sol.reserve(alpha);
 	vector<double> autovect;
 	double eigenvalue;
 	for (unsigned int i = 0; i < alpha; ++i)
 	{
-		debug << i << " eigenvalue" << endl;
-		autovect = pIteration(mat, 3000, eigenvalue, debug);
+		autovect = pIteration(mat, 3000, eigenvalue);
 		sol.push_back(autovect);
 		autovalores[i] = eigenvalue;
-		for (int i = 0; i < mat.size(); ++i){
-			for (int j = 0; j < mat.size(); ++j){
-				mat[i][j] -= autovect[i]*autovect[j]*eigenvalue;
+		#pragma omp parallel for
+			for (int i = 0; i < mat.size(); ++i){
+				for (int j = 0; j < mat.size(); ++j){
+					mat[i][j] -= autovect[i]*autovect[j]*eigenvalue;
+				}
 			}
-		}
-		
-		debug << eigenvalue << endl;
 	}
 	return sol;
 }
 
-vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama, vector<double> &autovals, ostream& debug) {
-	debug << "Entro al pls" << endl;
+vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, int gama, vector<double> &autovals) {
+
 	vector<vector<double>> w (gama);
 	autovals.resize(gama);
 	double eigenvalue;
@@ -814,22 +771,24 @@ vector<vector<double>> pls(vector<vector<double>> x, vector<vector<double>> y, i
 		vector<vector<double>> aux = multiply(trasponer(x), y);
 		vector<vector<double>> m_i = multiply(aux,trasponer(aux));
 
-		w[i] = pIteration(m_i, 3000, eigenvalue, debug);
+		w[i] = pIteration(m_i, 3000, eigenvalue);
 		autovals[i] = eigenvalue;
 		t_i = mult(x, w[i]);
 		normalizar(t_i);
 		ttx = tmult(t_i, x);
-		for (int i = 0; i < x.size(); ++i){
-			for (int j = 0; j < x[0].size(); ++j)
-				x[i][j] -= t_i[i]*ttx[j];
-		}
+		#pragma omp parallel for
+			for (int i = 0; i < x.size(); ++i){
+				for (int j = 0; j < x[0].size(); ++j)
+					x[i][j] -= t_i[i]*ttx[j];
+			}
 		tty = tmult(t_i, y);
-		for (int i = 0; i < y.size(); ++i){
-			for (int j = 0; j < y[0].size(); ++j)
-				y[i][j] -= t_i[i]*tty[j];
-		}
+		#pragma omp parallel for
+			for (int i = 0; i < y.size(); ++i){
+				for (int j = 0; j < y[0].size(); ++j)
+					y[i][j] -= t_i[i]*tty[j];
+			}
 	}
-	debug << "salgo del pls" << endl;
+
 	return w;
 
 }
@@ -934,14 +893,6 @@ void print(int ** M, int m, int n, ostream& out, const string caption , const ch
 	}
 }
 
-void dividirMatriz(vector<vector<double> > &m, double c){
-	for (unsigned int i = 0; i < m.size(); ++i){
-		for (unsigned int j = 0; j < m[0].size(); ++j)
-			m[i][j] /= c;
-	}
-}
-
-
 double precision_(int t_pos[], int f_pos[], double prec[], int size){
 	
 	double ret = 0;
@@ -1015,47 +966,36 @@ double f1_score_(double prec[], double rec[], double f1[], int size){
 	return ret;
 }
 
-void inplace_matrix_mult_by_scalar(vector<vector<double> >& M, double scalar){
-    int m = M.size();
-    int n = (M[0]).size();
-
-    int i, j;
-    for (i = 0; i < m; ++i){
-        for (j = 0; j < n; ++j){
-            M[i][j] *= scalar;
-        }
-    }
-}
-
 void inplace_matrix_div_by_scalar(vector<vector<double> >& M, double scalar){
     int m = M.size();
     int n = (M[0]).size();
 
     int i, j;
-    for (i = 0; i < m; ++i){
-        for (j = 0; j < n; ++j){
-            M[i][j] /= scalar;
-        }
-    }
+    #pragma omp parallel for
+	    for (i = 0; i < m; ++i){
+	        for (j = 0; j < n; ++j){
+	            M[i][j] /= scalar;
+	        }
+	    }
 }
 
-vector<vector<double>> fullPCA(vector<vector<int>>& ans, vector<double>& autovals, int alpha, vector<vector<bool>>& partition, int i, ostream& debug){
+vector<vector<double>> fullPCA(vector<vector<int>>& ans, vector<double>& autovals, int alpha, vector<vector<bool>>& partition, int i){
 
 	if (i != -1){ 
 		vector<vector<double>> x = toX_K(ans, i, partition); 
 		vector<vector<double>> M = PCA_M_K(x); 
-		vector<vector<double>> eigenvectors = deflate(M, alpha, autovals, debug);
+		vector<vector<double>> eigenvectors = deflate(M, alpha, autovals);
 		return eigenvectors;
 	} else {
 		vector<vector<double>> x = toX(ans);
 		vector<vector<double>> M = PCA_M_K(x);
-		vector<vector<double>> eigenvectors = deflate(M, alpha, autovals, debug);
+		vector<vector<double>> eigenvectors = deflate(M, alpha, autovals);
 		return eigenvectors;
 	}
 
 }
 
-vector<vector<double>> fullPLS(vector<vector<int>>& ans, vector<double>& autovals, int gamma, vector<vector<bool>>& partition, int i, ostream& debug){
+vector<vector<double>> fullPLS(vector<vector<int>>& ans, vector<double>& autovals, int gamma, vector<vector<bool>>& partition, int i){
 	if (i != -1){
 		vector<vector<double>> X = toX_K(ans, i, partition);
 		
@@ -1064,7 +1004,7 @@ vector<vector<double>> fullPLS(vector<vector<int>>& ans, vector<double>& autoval
 		vector<vector<double>> Y = preY_K(ans, i, partition);
 		toY(Y);
 
-		vector<vector<double>> Ws = pls(X, Y, gamma, autovals, debug);
+		vector<vector<double>> Ws = pls(X, Y, gamma, autovals);
 		return Ws;
 	} else {
 		vector<vector<double>> X = toX(ans);
@@ -1074,7 +1014,7 @@ vector<vector<double>> fullPLS(vector<vector<int>>& ans, vector<double>& autoval
 		vector<vector<double>> Y = preY_K(ans, i, partition);
 		toY(Y);
 
-		vector<vector<double>> Ws = pls(X, Y, gamma, autovals, debug);
+		vector<vector<double>> Ws = pls(X, Y, gamma, autovals);
 		return Ws;
 	}
 }

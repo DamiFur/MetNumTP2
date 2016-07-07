@@ -1,27 +1,32 @@
 TODO:
 
-0 - Codigo: falta mejorar precisión PLS
+0 - Correr PCA y PLS con K=10 y los gammas aplhas y kappas óptimos pero sin paralelizar a ver cuanto tarda
 
 1 - Introducción
 
 2 - Desarrollo:
 	- Explicación KNN (listo)
-	- Explicación PCA (listo) (revisar con ayudante)
-	- Explicación PLS
+	- Explicación PCA (listo) (que jorge reescriba)
+	- Explicación PLS (jorge)
 
 3 - Informe Implementación (falta revisar)
+	- Paralelismo en la multiplicación
+	- Paralelismo que hizo nico
+	- OpenMP
+	- PLS: orden en la multiplicación de los ti
 
 4 - Analisis de cómo afecta el tamaño:
-	- Optimización en el orden de multiplicació  de las matrices
+	- Optimización en el orden de multiplicación de las matrices
 	- Distintos tamaños de imágenes
 
 5 - Cómo mejoramos la precisión:
-	- Detalle
+	- cantidad de iteraciones de pIteation
+	- Autovalor es norma del autovector (antes de normalizar)
 	- Métricas para distintas versiones del código
 
 6 - Experimentos pedidos:
 	- knn para distintos k. Compromiso de tiempo vs efectividad
-	- pca y pls para distintos alpha, gamma y kappa. Comparar entre si y con knn. También compromiso de tiempo vs efectividad.
+	- pca y pls para distintos alpha, gamma y kappa. Comparar entre si y con knn. También compromiso de tiempo vs efectividad. Diferencias de tiempo con y sin paralelismo.
 	- Cual es la mejor alternativa de todo lo analizado anteriormente
 	- Correr el método óptimo para train entero sin particiones y participar en kaggle. Tomar el tiempo de cuanto tarda esto
 

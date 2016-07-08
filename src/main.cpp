@@ -42,11 +42,6 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
 vector<vector<double> > toX_K(vector<vector<int>>& original, const unsigned int K, vector<vector<bool>>& partition);
 vector<vector<double> > PCA_M_K(vector<vector<double> > X_K);
 vector<double> pIteration(vector<vector<double> > &a, int n, double &e);
-void print(vector<vector<int> >& M , ostream& out, const string caption = "<empty caption>", const char sep = ' ');
-void print(vector<vector<double> >& M, ostream& out, const string caption = "<empty caption>", const char sep = ' ');
-void print(int ** M, int m, int n, ostream& out, const string caption = "<empty caption>", const char sep = ' ');
-void print(vector<double> & M, ostream& out, const string caption = "<empty caption>", const char sep = ' ');
-void printAsRow(vector<double>& v, ostream& out, const string caption = "<empty caption>", const char sep = ' ');
 vector<vector<int>> filtrarPartition(const vector<vector<int>>& x, const vector<vector<bool>>& partition, int k, bool b);
 template<typename T>
 int knn(const vector<vector<T>>& train, const vector<T>& adivinar, int k);
@@ -117,15 +112,10 @@ int main(int argc, char * argv[]){
 	kaggle_s.append(".csv");
 
 	// Archivo de salida para hit-rate y otras metricas 
-	string metricas_s_PCA (outputPath);
-	metricas_s_PCA.append("_PCA.mtx");
-	string vmetricas_s_PCA(outputPath);
-	vmetricas_s_PCA.append("_PCA.vmtx");
-
-	string metricas_s_PLS (outputPath);
-	metricas_s_PLS.append("_PLS.mtx");
-	string vmetricas_s_PLS(outputPath);
-	vmetricas_s_PLS.append("_PLS.vmtx");
+	string metricas_s (outputPath);
+	metricas_s.append(".mtx");
+	string vmetricas_s(outputPath);
+	vmetricas_s.append(".vmtx");
 
 	string train_s;
 	string test_s;
@@ -204,15 +194,10 @@ int main(int argc, char * argv[]){
 		}
 		kaggle.close();
 	} else { // Tests provienen de particionar train.csv
-		ofstream metricas_PCA;
-		metricas_PCA.open(metricas_s_PCA);
-		ofstream vmetricas_PCA;
-		vmetricas_PCA.open(vmetricas_s_PCA);
-
-		ofstream metricas_PLS;
-		metricas_PLS.open(metricas_s_PLS);
-		ofstream vmetricas_PLS;
-		vmetricas_PLS.open(vmetricas_s_PLS);
+		ofstream metricas;
+		metricas.open(metricas_s);
+		ofstream vmetricas;
+		vmetricas.open(vmetricas_s);
 
 		int acertados_tot = 0, total_tot = 0;
 		// Levanto partition
@@ -229,6 +214,15 @@ int main(int argc, char * argv[]){
 		vector<vector<int>> Train (db_size, vector<int>(image_size + 1));
     	trainMatrix(train_s, Train, db_size);
     	cout << "Archivo :" << outputPath << endl;
+    	vector<double> PCA_evals;
+    	PCA_evals.reserve(alpha);
+		vector<vector<double> > PCA_evec;
+		vector<double> PLS_evals;
+		PLS_evals.reserve(gamma);
+		vector<vector<double> > PLS_evec;
+		vector<vector<int>> trainImg;
+		vector<vector<int>> testImg;
+    	
 		// Itero sobre las particiones
 		for (unsigned int i = 0; i < partitions.size(); ++i){
 			printf("Calculando partition %i\n", i);
@@ -240,22 +234,15 @@ int main(int argc, char * argv[]){
 			vector<vector<int>> Train_i = filtrarPartition(Train, partitions, i, true);
 			vector<vector<int>> Test_i = filtrarPartition(Train, partitions, i, false);
 
+			
 			// Calcular autovals de los dos metodos, solo si el metodo es distinto
 			// a 0
-			vector<double> PCA_evals;
-			vector<vector<double> > PCA_evec;
-			vector<double> PLS_evals;
-			vector<vector<double> > PLS_evec;
-			vector<vector<int>> trainImg;
-			vector<vector<int>> testImg;
 			if (metodo != 0) {
 				// PCA
 				auto t0 = Clock::now();
-				PCA_evals.reserve(alpha);
 				PCA_evec = fullPCA(Train, PCA_evals, alpha, partitions, i);
 				// PLS-DA
 				auto t1 = Clock::now();
-				PLS_evals.reserve(gamma);
 				PLS_evec = fullPLS(Train, PLS_evals, gamma, partitions, i);
 				// Escritura Autovalores en output
 				auto t2 = Clock::now();
@@ -268,7 +255,7 @@ int main(int argc, char * argv[]){
 					output << std::scientific << PLS_evals[j] << endl; 
 				}
 				
-				cout << "PCA tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t1-t0).count() << ", PLS tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t2-t1).count() << endl;
+				cout << "PCA tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t1-t0).count() << "s, PLS tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t2-t1).count() << 's' <<endl;
 				
 				trainImg = toImageVector(Train_i);
 				testImg = toImageVector(Test_i);
@@ -285,7 +272,7 @@ int main(int argc, char * argv[]){
 				}
 				auto t2 = Clock::now();
 				std::cout << "Tiempo en correr knn: " << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count() << " minutos" << std::endl;
-			} else {
+			} else if (metodo == 1) {
 				
 				vector<vector<double>> tcpca_train = characteristic_transformation(PCA_evec, trainImg);
 				vector<vector<double>> tcpca_test = characteristic_transformation(PCA_evec, testImg);
@@ -297,32 +284,30 @@ int main(int argc, char * argv[]){
 					acum_metrics(t_pos, f_pos, f_neg, p_acertados, guess, Test_i[p_total][0]);
 				}
 				auto t1 = Clock::now();
-				cout << "kNN en PCA tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t1-t0).count() << endl;
+				cout << "kNN en PCA tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t1-t0).count() << 's' << endl;
 
-				gen_metrics(t_pos, f_pos, f_neg, p_acertados, p_total, metricas_PCA, vmetricas_PCA);
-			
+				gen_metrics(t_pos, f_pos, f_neg, p_acertados, p_total, metricas, vmetricas);
+			}else {
 				vector<vector<double>> tcpls_train = characteristic_transformation(PLS_evec, trainImg);
 				vector<vector<double>> tcpls_test = characteristic_transformation(PLS_evec, testImg);
 				vector<vector<double>> pls_train_labeled = labelImg(tcpls_train, Train_i, gamma);
 				vector<vector<double>> pls_test_labeled = labelImg(tcpls_test, Test_i, gamma);
-				t0 = Clock::now();
-				for (p_total_pls = 0; p_total_pls < Test_i.size(); ++p_total_pls){
-					int guess = knn(pls_train_labeled, pls_test_labeled[p_total_pls], kappa);
-					acum_metrics(t_pos_pls, f_pos_pls, f_neg_pls, p_acertados_pls, guess, Test_i[p_total_pls][0]);
+				auto t0 = Clock::now();
+				for (p_total = 0; p_total < Test_i.size(); ++p_total){
+					int guess = knn(pls_train_labeled, pls_test_labeled[p_total], kappa);
+					acum_metrics(t_pos, f_pos, f_neg, p_acertados, guess, Test_i[p_total][0]);
 				}
-				t1 = Clock::now();
-				cout << "kNN en PLS tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t1-t0).count() << endl;
+				auto t1 = Clock::now();
+				cout << "kNN en PLS tardo: " << std::chrono::duration_cast<std::chrono::seconds>(t1-t0).count() << 's' << endl;
 
-				gen_metrics(t_pos_pls, f_pos_pls, f_neg_pls, p_acertados_pls, p_total_pls, metricas_PLS, vmetricas_PLS);
+				gen_metrics(t_pos, f_pos, f_neg, p_acertados, p_total, metricas, vmetricas);
 			}
 			// genera y escribe metricas
 			
 		}
 		output.close();
-		metricas_PCA.close();
-		vmetricas_PCA.close();
-		metricas_PLS.close();
-		vmetricas_PLS.close();
+		metricas.close();
+		vmetricas.close();
 	}
 
 	return 0;
@@ -422,7 +407,7 @@ vector<vector<double>> trasponer(vector<vector<double>> matrix){
 
 	int m = (matrix[0]).size();
 	int n = matrix.size();
-	vector<vector<double>> ans (m, vector<double> (n, 0));
+	vector<vector<double>> ans (m, vector<double> (n));
 	#pragma omp parallel for
 		for(int i = 0; i < m; i++){
 			for(int j = 0; j < n; j++){
@@ -512,7 +497,9 @@ vector<vector<double>> toX(vector<vector<int>>& ans, int db_size){
 		average[j] /= (double) db_size;
 	}
 
-	vector<vector<double>> x (db_size, vector<double> (image_size, 0));
+
+
+	vector<vector<double>> x (db_size, vector<double> (image_size));
 	// Comentado dado que nos ahorramos un sqrt si lo hacemos al hacer x' * x
 	//double n = sqrt(K - 1);
 	for(int i = 0; i < db_size; i++){
@@ -534,19 +521,19 @@ vector<vector<double>> multiply(vector<vector<double>> x, vector<vector<double>>
 
 // Paraleliza, no importa como... requiere flag de compilador -fopenmp
 // Baja el calculo de 42 minutos a 35 para 768x42000 * 420000x768
-#pragma omp parallel for
-    for(int i = 0; i < m; i++){
-        // itero por k antes que por j, por cuestiones de cache... baja de 35 minutos a 10 el calculo para 768x42000 * 42000x768
-        for(int k = 0; k < n; k++){
-            if (x[i][k] == 0){
-                continue;
-            } else {
-                for(int j = 0; j < r; j++){
-                    ans[i][j] += x[i][k] * y[k][j];
-                }
-            }
-        }
-    }
+	#pragma omp parallel for
+	    for(int i = 0; i < m; i++){
+	        // itero por k antes que por ,j por cuestiones de cache... baja de 35 minutos a 10 el calculo para 768x42000 * 42000x768
+	        for(int k = 0; k < n; k++){
+	            if (x[i][k] == 0){
+	                continue;
+	            } else {
+	                for(int j = 0; j < r; j++){
+	                    ans[i][j] += x[i][k] * y[k][j];
+	                }
+	            }
+	        }
+	    }
 
 
     return ans;
@@ -560,15 +547,16 @@ vector<vector<double>> characteristic_transformation(vector<vector<double>> eige
 	int alpha = eigenvectors.size(); // Dimensiones a considerar
 
 	vector<vector<double>> dimages(m, vector<double> (n));
-	for (unsigned int i = 0; i < m; ++i){
-		for (unsigned int j = 0; j < n; ++j){
-			dimages[i][j] = (double) images[i][j];
+	#pragma omp parallel for
+		for (unsigned int i = 0; i < m; ++i){
+			for (unsigned int j = 0; j < n; ++j){
+				dimages[i][j] = (double) images[i][j];
+			}
 		}
-	}
-	vector<vector<double>> ans (m, vector<double> (alpha, 0));
-	ans = multiply(dimages, trasponer(eigenvectors));
+	// (m, vector<double> (alpha, 0));
+	//vector<vector<double>> ans = ;
 
-	return ans;
+	return multiply(dimages, trasponer(eigenvectors));
 
 }
 
@@ -655,16 +643,6 @@ vector<double> mult(vector<vector<double> > &a, vector<double> &b){
 	return result;
 }
 
-void matSub(vector<vector<double> > &a, vector<vector<double> > &b){
-	unsigned int tam = a.size();
-	unsigned int tam2 = a[0].size();
-	for (unsigned int i = 0; i < tam; i++){
-		for (unsigned int j = 0; j < tam2; ++j){
-			a[i][j] -= b[i][j];		
-		}
-	}
-}
-
 double productoInterno(vector<double> &v, vector<double> &w){
     assert(v.size() == w.size());
     double sol = 0;
@@ -701,22 +679,11 @@ double norm(vector<double> &b, int metodo = 2){
     return -1.0;
 }
 
-
-
 void normalizar(vector<double> &b){
 	double norma = norm(b);
 	for (unsigned int i = 0; i < b.size(); ++i){
 		b[i] /= norma;		
 	}
-}
-
-double prod(std::vector<double> &v1, std::vector<double> v2){
-    double sol =0;
-    for (unsigned int i = 0; i < v1.size(); ++i)
-    {
-        sol+=(v1[i]*v2[i]);
-    }
-    return sol;
 }
 
 vector<double> pIteration(vector<vector<double> > &A, int n, double &e){
@@ -744,13 +711,6 @@ vector<double> pIteration(vector<vector<double> > &A, int n, double &e){
 		e0 = e; // Setea autovalor de referencia para siguiente iteracion
     }
     return v;
-}
-
-void multConst(vector<vector<double> > &a, double n){
-	for (unsigned int i = 0; i < a.size(); ++i){
-		for (unsigned int j = 0; j < a.size(); ++j)
-			a[i][j]*=n;
-	}
 }
 
 vector<vector<double> > deflate(vector<vector<double> > &mat, unsigned int alpha, vector<double> &autovalores){
@@ -830,15 +790,15 @@ vector<vector<double>> preY_K(vector<vector<int>> matrix, int part, vector<vecto
 }
 
 void toY(vector<vector<double>>& matrix){
-	int n = matrix.size();
+	double n = matrix.size();
 	int m = 10;
-	vector<int> average(m, 0.0);
+	vector<double> average(m, 0);
 
 	double sq = sqrt(n - 1);
 
 	for(int i = 0; i < n; i++){
 		for(int j = 0; j < m; j++){
-			average[j] += (double)matrix[i][j];
+			average[j] += matrix[i][j];
 		}
 	}
 
@@ -851,59 +811,6 @@ void toY(vector<vector<double>>& matrix){
 			matrix[i][j] -= average[j];
 			matrix[i][j] /= sq;
 		}
-	}
-}
-
-void print(vector<vector<int> >& M  , ostream& out, const string caption , const char sep){
-	int m = M.size();
-	int n = (M[0]).size();
-
-	out << caption << endl;
-	for (int i = 0; i < m; i++){
-		for (int j=0; j < n -1; j++){
-			out << M[i][j] << sep;
-		}
-		out << M[i][n-1] << endl;
-	}
-}
-
-void print(vector<vector<double> >& M , ostream& out, const string caption , const char sep ){
-	int m = M.size();
-	int n = (M[0]).size();
-
-	// out << caption << endl;
-	for (int i = 0; i < m; i++){
-		for (int j=0; j < n -1; j++){
-			out << setprecision(5) << M[i][j] << sep;
-		}
-		out << setprecision(5) << M[i][n-1] << endl;
-	}
-}
-
-void print(vector<double> & M , ostream& out, const string caption , const char sep){
-	int m = M.size();
-
-	for (int i = 0; i < m; i++){
-		out << setprecision(5) << M[i] << endl;
-	}
-}
-
-void printAsRow(vector<double>& v, ostream& out, const string caption, const char sep){
-	int m = v.size();
-	out << caption << endl;
-	for (int i = 0; i < m -1; i++){
-		out << setprecision(5) << v[i] << sep;
-	}
-	out << setprecision(5) << v[m-1] << endl;
-}
-
-void print(int ** M, int m, int n, ostream& out, const string caption , const char sep ){
-	// out << caption << endl;
-	for (int i = 0; i < m; i++){
-		for (int j = 0; j < n - 1; j++){
-			out << setprecision(5) << M[i][j] << sep;
-		}
-		out << setprecision(5) << M[i][n-1] << endl;
 	}
 }
 
@@ -984,10 +891,9 @@ void inplace_matrix_div_by_scalar(vector<vector<double> >& M, double scalar){
     int m = M.size();
     int n = (M[0]).size();
 
-    int i, j;
     #pragma omp parallel for
-	    for (i = 0; i < m; ++i){
-	        for (j = 0; j < n; ++j){
+	    for (int i = 0; i < m; ++i){
+	        for (int j = 0; j < n; ++j){
 	            M[i][j] /= scalar;
 	        }
 	    }

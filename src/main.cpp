@@ -318,6 +318,7 @@ int main(int argc, char * argv[]){
 vector<vector<int>> filtrarPartition(const vector<vector<int>>& x, const vector<vector<bool>>& partition, int k, bool b) {
 	// Filtra por partition y ademas convierte a double
 	vector<vector<int>> ret;
+	ret.reserve(x.size());
 
 	for (unsigned int i = 0; i < x.size(); ++i) {
 		if (partition[k][i] == b) {
@@ -553,11 +554,8 @@ vector<vector<double>> characteristic_transformation(vector<vector<double>> eige
 				dimages[i][j] = (double) images[i][j];
 			}
 		}
-	// (m, vector<double> (alpha, 0));
-	//vector<vector<double>> ans = ;
 
 	return multiply(dimages, trasponer(eigenvectors));
-
 }
 
 #define cuad(x) ((x)*(x))
@@ -651,32 +649,8 @@ double productoInterno(vector<double> &v, vector<double> &w){
     return sol;
 }
 
-double norm(vector<double> &b, int metodo = 2){
-    // metodo 1 = norma 1
-    // metodo 2 (default) = norma 2
-    // metodo -1 = norma infinito
-
-    assert(metodo == 2 || metodo == 1 || metodo == -1);
-    if (metodo == 2){
+inline double norm(vector<double> &b){
         return sqrt(productoInterno(b, b));
-    }
-    if (metodo == 1){
-        double res = 0;
-        for (unsigned int i = 0; i < b.size(); i++){
-            res += abs(b[i]);
-        }
-        return res;
-    }
-    if (metodo == -1){
-        double max = 0;
-        for (unsigned int i = 0; i < b.size(); i++){
-            if (abs(b[i]) > max){
-                max = abs(b[i]);
-            }
-        }
-        return max;
-    }
-    return -1.0;
 }
 
 void normalizar(vector<double> &b){

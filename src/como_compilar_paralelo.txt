@@ -1,0 +1,6 @@
+Para habilitar el procesamiento en paralelo con openMP, agregar como flag del compilador -fopenmp y como flag de linker -lgomp
+
+Esto tiene como prerequisito tener instaladas las librerías correspondientes de openMP (las distribuciones de Linux suelen tenerlas por defecto)
+
+Sin este flag, el código compila normalmente pero no utilizará el procesamiento en paralelo.
+
